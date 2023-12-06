@@ -5,6 +5,7 @@
     <file type="Quarkus" url="file://$PROJECT_DIR$/deployment" />
     <file type="Quarkus" url="file://$PROJECT_DIR$/integration-tests" />
     <file type="Quarkus" url="file://$PROJECT_DIR$/runtime" />
+    <file type="Qute" url="file://$PROJECT_DIR$/deployment" />
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
