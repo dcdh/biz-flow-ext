@@ -68,7 +68,7 @@
   </build>
   <profiles>
     <profile>
-      <id>native-image</id>
+      <aggregateId>native-image</aggregateId>
       <activation>
         <property>
           <name>native</name>
