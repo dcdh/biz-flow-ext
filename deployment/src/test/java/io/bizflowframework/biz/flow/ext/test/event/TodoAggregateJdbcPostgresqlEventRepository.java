@@ -14,7 +14,7 @@ import jakarta.inject.Singleton;
 public final class TodoAggregateJdbcPostgresqlEventRepository extends JdbcPostgresqlEventRepository<TodoId, TodoAggregateRoot> {
     public TodoAggregateJdbcPostgresqlEventRepository(final AgroalDataSource dataSource,
                                                       final AggregateIdInstanceCreator aggregateIdInstanceCreator,
-                                                      final Instance<AggregateRootEventPayloadSerde<TodoId, TodoAggregateRoot, ?>> aggregateRootEventPayloadsSerde) {
+                                                      final Instance<AggregateRootEventPayloadSerde<TodoAggregateRoot, ?>> aggregateRootEventPayloadsSerde) {
         super(dataSource, aggregateIdInstanceCreator, aggregateRootEventPayloadsSerde);
     }
 

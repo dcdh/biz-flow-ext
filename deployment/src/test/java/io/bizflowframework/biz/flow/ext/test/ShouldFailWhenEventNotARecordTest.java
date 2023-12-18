@@ -41,7 +41,7 @@ public class ShouldFailWhenEventNotARecordTest {
         }
     }
 
-    static final class InvalidEvent implements AggregateRootEventPayload<TestId, TestAggregateRoot> {
+    static final class InvalidEvent implements AggregateRootEventPayload<TestAggregateRoot> {
         @Override
         public void apply(final TestAggregateRoot aggregateRoot) {
         }

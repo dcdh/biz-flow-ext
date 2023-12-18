@@ -6,7 +6,7 @@ import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
 
 import java.util.Objects;
 
-public record TodoCreated(String description) implements AggregateRootEventPayload<TodoId, TodoAggregateRoot> {
+public record TodoCreated(String description) implements AggregateRootEventPayload<TodoAggregateRoot> {
     public TodoCreated {
         Objects.requireNonNull(description);
     }

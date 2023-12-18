@@ -8,7 +8,7 @@ public record EventType(String type) implements Serializable {
         Objects.requireNonNull(type);
     }
 
-    public EventType(final Class<? extends AggregateRootEventPayload<?, ?>> aggregateRootEventPayloadClass) {
+    public EventType(final Class<? extends AggregateRootEventPayload<?>> aggregateRootEventPayloadClass) {
         this(aggregateRootEventPayloadClass.getSimpleName());
     }
 }

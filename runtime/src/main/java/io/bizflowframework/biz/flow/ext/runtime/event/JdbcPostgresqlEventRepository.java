@@ -23,11 +23,11 @@ import java.util.Objects;
 public abstract class JdbcPostgresqlEventRepository<ID extends AggregateId, T extends AggregateRoot<ID, T>> implements EventRepository<ID, T> {
     private final AgroalDataSource dataSource;
     private final AggregateIdInstanceCreator aggregateIdInstanceCreator;
-    private final Instance<AggregateRootEventPayloadSerde<ID, T, ?>> aggregateRootEventPayloadsSerde;
+    private final Instance<AggregateRootEventPayloadSerde<T, ?>> aggregateRootEventPayloadsSerde;
 
     public JdbcPostgresqlEventRepository(final AgroalDataSource dataSource,
                                          final AggregateIdInstanceCreator aggregateIdInstanceCreator,
-                                         final Instance<AggregateRootEventPayloadSerde<ID, T, ?>> aggregateRootEventPayloadsSerde) {
+                                         final Instance<AggregateRootEventPayloadSerde<T, ?>> aggregateRootEventPayloadsSerde) {
         this.dataSource = Objects.requireNonNull(dataSource);
         this.aggregateIdInstanceCreator = Objects.requireNonNull(aggregateIdInstanceCreator);
         this.aggregateRootEventPayloadsSerde = Objects.requireNonNull(aggregateRootEventPayloadsSerde);
@@ -108,7 +108,7 @@ public abstract class JdbcPostgresqlEventRepository<ID extends AggregateId, T ex
     private AggregateRootDomainEvent<ID, T> toAggregateRootDomainEvent(final ResultSet resultSet) throws SQLException, MissingSerdeException {
         final AggregateType aggregateType = new AggregateType(resultSet.getString("aggregateroottype"));
         final EventType eventType = new EventType(resultSet.getString("eventtype"));
-        final AggregateRootEventPayloadSerde<ID, T, ?> aggregateRootEventPayloadSerde = getSerdeInstance(aggregateType, eventType);
+        final AggregateRootEventPayloadSerde<T, ?> aggregateRootEventPayloadSerde = getSerdeInstance(aggregateType, eventType);
         final ID aggregateId = aggregateIdInstanceCreator.createInstance(aggregateIdClazz(), resultSet.getString("aggregaterootid"));
         return new AggregateRootDomainEvent<>(
                 new AggregateRootIdentifier<>(
@@ -119,7 +119,7 @@ public abstract class JdbcPostgresqlEventRepository<ID extends AggregateId, T ex
                 aggregateRootEventPayloadSerde.deserialize(new SerializedEventPayload(resultSet.getString("eventpayload"))));
     }
 
-    private AggregateRootEventPayloadSerde<ID, T, ?> getSerdeInstance(
+    private AggregateRootEventPayloadSerde<T, ?> getSerdeInstance(
             final AggregateType aggregateType, final EventType eventType) throws MissingSerdeException {
         return aggregateRootEventPayloadsSerde.stream()
                 .filter(instance -> aggregateType.equals(new AggregateType(instance.aggregateRootClass())))

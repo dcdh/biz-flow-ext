@@ -10,7 +10,7 @@ public record AggregateRootDomainEvent<ID extends AggregateId, T extends Aggrega
         AggregateRootIdentifier<ID> aggregateRootIdentifier,
         AggregateVersion aggregateVersion,
         CreatedAt createdAt,
-        AggregateRootEventPayload<ID, T> payload) implements Serializable {
+        AggregateRootEventPayload<T> payload) implements Serializable {
     public AggregateRootDomainEvent {
         Objects.requireNonNull(aggregateRootIdentifier);
         Objects.requireNonNull(aggregateVersion);
@@ -38,7 +38,7 @@ public record AggregateRootDomainEvent<ID extends AggregateId, T extends Aggrega
         return createdAt;
     }
 
-    public AggregateRootEventPayload<ID, T> payload() {
+    public AggregateRootEventPayload<T> payload() {
         return payload;
     }
 

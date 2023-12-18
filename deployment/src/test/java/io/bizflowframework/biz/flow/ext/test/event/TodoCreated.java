@@ -2,11 +2,10 @@ package io.bizflowframework.biz.flow.ext.test.event;
 
 import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
 import io.bizflowframework.biz.flow.ext.test.TodoAggregateRoot;
-import io.bizflowframework.biz.flow.ext.test.TodoId;
 
 import java.util.Objects;
 
-public record TodoCreated(String description) implements AggregateRootEventPayload<TodoId, TodoAggregateRoot> {
+public record TodoCreated(String description) implements AggregateRootEventPayload<TodoAggregateRoot> {
     public TodoCreated {
         Objects.requireNonNull(description);
     }
