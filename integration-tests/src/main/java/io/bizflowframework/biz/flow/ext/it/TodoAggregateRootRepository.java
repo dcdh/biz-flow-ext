@@ -12,9 +12,4 @@ public final class TodoAggregateRootRepository extends BaseAggregateRootReposito
                                        final AggregateRootInstanceCreator aggregateRootInstanceCreator) {
         super(eventRepository, aggregateRootInstanceCreator);
     }
-
-    @Override
-    protected Class<TodoAggregateRoot> clazz() {
-        return TodoAggregateRoot.class;
-    }
 }

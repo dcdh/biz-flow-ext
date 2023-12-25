@@ -1,6 +1,7 @@
 package io.bizflowframework.biz.flow.ext.deployment;
 
 import io.bizflowframework.biz.flow.ext.runtime.AggregateId;
+import io.bizflowframework.biz.flow.ext.runtime.BaseAggregateRootRepository;
 import io.bizflowframework.biz.flow.ext.runtime.DefaultCreatedAtProvider;
 import io.bizflowframework.biz.flow.ext.runtime.api.ExceptionsMapper;
 import io.bizflowframework.biz.flow.ext.runtime.command.Command;
@@ -40,6 +41,22 @@ class BizFlowExtProcessor {
                                         .setClassToTransform(classInfo.name().toString())
                                         .setVisitorFunction((s, classVisitor) ->
                                                 new AggregateRootEventPayloadSerdeClassVisitor(classVisitor))
+                                        .setCacheable(true)
+                                        .build()
+                        ));
+    }
+
+    @BuildStep
+    void enhanceBaseAggregateRootRepository(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                            final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownSubclasses(DotName.createSimple(BaseAggregateRootRepository.class))
+                .forEach(classInfo ->
+                        bytecodeTransformerBuildItemProducer.produce(
+                                new BytecodeTransformerBuildItem.Builder()
+                                        .setClassToTransform(classInfo.name().toString())
+                                        .setVisitorFunction((s, classVisitor) ->
+                                                new BaseAggregateRootRepositoryClassVisitor(classVisitor))
                                         .setCacheable(true)
                                         .build()
                         ));
