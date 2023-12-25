@@ -24,14 +24,4 @@ public final class TodoCreatedAggregateRootEventPayloadSerde implements Aggregat
         return new TodoCreated(
                 jsonObject.getString(TodoAggregateRoot.DESCRIPTION));
     }
-
-    @Override
-    public Class<TodoAggregateRoot> aggregateRootClass() {
-        return TodoAggregateRoot.class;
-    }
-
-    @Override
-    public Class<TodoCreated> aggregateRootEventPayloadClass() {
-        return TodoCreated.class;
-    }
 }

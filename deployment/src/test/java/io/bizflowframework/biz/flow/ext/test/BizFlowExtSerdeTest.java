@@ -1,0 +1,43 @@
+package io.bizflowframework.biz.flow.ext.test;
+
+import io.bizflowframework.biz.flow.ext.test.event.TodoCreated;
+import io.bizflowframework.biz.flow.ext.test.event.TodoCreatedAggregateRootEventPayloadSerde;
+import io.bizflowframework.biz.flow.ext.test.event.TodoMarkedAsCompleted;
+import io.bizflowframework.biz.flow.ext.test.event.UnknownTodoEvent;
+import io.quarkus.test.QuarkusUnitTest;
+import jakarta.inject.Inject;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class BizFlowExtSerdeTest {
+
+    @RegisterExtension
+    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
+                            .addClass(TodoAggregateRoot.class)
+                            .addClass(TodoId.class)
+                            .addClass(TodoStatus.class)
+                            .addClass(TodoCreated.class)
+                            .addClass(TodoMarkedAsCompleted.class)
+                            .addClass(TodoCreatedAggregateRootEventPayloadSerde.class)
+                            .addClass(UnknownTodoEvent.class));
+
+    @Inject
+    TodoCreatedAggregateRootEventPayloadSerde todoCreatedAggregateRootEventPayloadSerde;
+
+    @Test
+    public void shouldReturnAggregateRootClass() {
+        assertThat(todoCreatedAggregateRootEventPayloadSerde.aggregateRootClass())
+                .isEqualTo(TodoAggregateRoot.class);
+    }
+
+    @Test
+    public void shouldReturnAggregateRootEventPayloadClass() {
+        assertThat(todoCreatedAggregateRootEventPayloadSerde.aggregateRootEventPayloadClass())
+                .isEqualTo(TodoCreated.class);
+    }
+}

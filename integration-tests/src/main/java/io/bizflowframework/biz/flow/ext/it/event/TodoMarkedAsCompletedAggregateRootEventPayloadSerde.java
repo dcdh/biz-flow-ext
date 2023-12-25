@@ -20,14 +20,4 @@ public final class TodoMarkedAsCompletedAggregateRootEventPayloadSerde implement
     public TodoMarkedAsCompleted deserialize(final SerializedEventPayload serializedEventPayload) {
         return new TodoMarkedAsCompleted();
     }
-
-    @Override
-    public Class<TodoAggregateRoot> aggregateRootClass() {
-        return TodoAggregateRoot.class;
-    }
-
-    @Override
-    public Class<TodoMarkedAsCompleted> aggregateRootEventPayloadClass() {
-        return TodoMarkedAsCompleted.class;
-    }
 }

@@ -9,11 +9,13 @@ import io.bizflowframework.biz.flow.ext.runtime.creational.ReflectionAggregateRo
 import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
 import io.bizflowframework.biz.flow.ext.runtime.event.PostgresqlInitializer;
 import io.bizflowframework.biz.flow.ext.runtime.incrementer.DefaultAggregateVersionIncrementer;
+import io.bizflowframework.biz.flow.ext.runtime.serde.AggregateRootEventPayloadSerde;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.ValidationPhaseBuildItem.ValidationErrorBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.ApplicationIndexBuildItem;
+import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.resteasy.reactive.spi.CustomExceptionMapperBuildItem;
 import org.jboss.jandex.DotName;
@@ -25,6 +27,22 @@ class BizFlowExtProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    void enhanceAggregateRootEventPayloadSerde(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                               final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(DotName.createSimple(AggregateRootEventPayloadSerde.class))
+                .forEach(classInfo ->
+                        bytecodeTransformerBuildItemProducer.produce(
+                                new BytecodeTransformerBuildItem.Builder()
+                                        .setClassToTransform(classInfo.name().toString())
+                                        .setVisitorFunction((s, classVisitor) ->
+                                                new AggregateRootEventPayloadSerdeClassVisitor(classVisitor))
+                                        .setCacheable(true)
+                                        .build()
+                        ));
     }
 
     @BuildStep
