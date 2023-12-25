@@ -20,14 +20,14 @@ import java.util.List;
 import java.util.Objects;
 
 @Singleton
-public abstract class JdbcPostgresqlEventRepository<ID extends AggregateId, T extends AggregateRoot<ID, T>> implements EventRepository<ID, T> {
+public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, T extends AggregateRoot<ID, T>> implements EventRepository<ID, T> {
     private final AgroalDataSource dataSource;
     private final AggregateIdInstanceCreator aggregateIdInstanceCreator;
     private final Instance<AggregateRootEventPayloadSerde<T, ?>> aggregateRootEventPayloadsSerde;
 
-    public JdbcPostgresqlEventRepository(final AgroalDataSource dataSource,
-                                         final AggregateIdInstanceCreator aggregateIdInstanceCreator,
-                                         final Instance<AggregateRootEventPayloadSerde<T, ?>> aggregateRootEventPayloadsSerde) {
+    public BaseJdbcPostgresqlEventRepository(final AgroalDataSource dataSource,
+                                             final AggregateIdInstanceCreator aggregateIdInstanceCreator,
+                                             final Instance<AggregateRootEventPayloadSerde<T, ?>> aggregateRootEventPayloadsSerde) {
         this.dataSource = Objects.requireNonNull(dataSource);
         this.aggregateIdInstanceCreator = Objects.requireNonNull(aggregateIdInstanceCreator);
         this.aggregateRootEventPayloadsSerde = Objects.requireNonNull(aggregateRootEventPayloadsSerde);
