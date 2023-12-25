@@ -7,7 +7,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public final class BaseJdbcPostgresqlEventRepositoryClassVisitor extends ClassVisitor {
-    private static final String AGGREGATE_ROOT_ID_CLASS_METHOD_NAMING = "aggregateIdClazz";
+    public static final String AGGREGATE_ROOT_ID_CLASS_METHOD_NAMING = "aggregateIdClazz";
     private String className;
     private ClassTypeParameter aggregateRootId;
 

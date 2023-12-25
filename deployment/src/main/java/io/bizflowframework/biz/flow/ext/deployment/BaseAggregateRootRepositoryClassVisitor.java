@@ -7,7 +7,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public final class BaseAggregateRootRepositoryClassVisitor extends ClassVisitor {
-    private static final String AGGREGATE_ROOT_CLASS_METHOD_NAMING = "clazz";
+    public static final String AGGREGATE_ROOT_CLASS_METHOD_NAMING = "clazz";
 
     private String className;
     private ClassTypeParameter aggregateRoot;
