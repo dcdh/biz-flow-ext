@@ -8,6 +8,7 @@ import io.bizflowframework.biz.flow.ext.runtime.command.Command;
 import io.bizflowframework.biz.flow.ext.runtime.creational.ReflectionAggregateIdInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.creational.ReflectionAggregateRootInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
+import io.bizflowframework.biz.flow.ext.runtime.event.BaseJdbcPostgresqlEventRepository;
 import io.bizflowframework.biz.flow.ext.runtime.event.PostgresqlInitializer;
 import io.bizflowframework.biz.flow.ext.runtime.incrementer.DefaultAggregateVersionIncrementer;
 import io.bizflowframework.biz.flow.ext.runtime.serde.AggregateRootEventPayloadSerde;
@@ -57,6 +58,22 @@ class BizFlowExtProcessor {
                                         .setClassToTransform(classInfo.name().toString())
                                         .setVisitorFunction((s, classVisitor) ->
                                                 new BaseAggregateRootRepositoryClassVisitor(classVisitor))
+                                        .setCacheable(true)
+                                        .build()
+                        ));
+    }
+
+    @BuildStep
+    void enhanceBaseJdbcPostgresqlEventRepository(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                                  final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownSubclasses(DotName.createSimple(BaseJdbcPostgresqlEventRepository.class))
+                .forEach(classInfo ->
+                        bytecodeTransformerBuildItemProducer.produce(
+                                new BytecodeTransformerBuildItem.Builder()
+                                        .setClassToTransform(classInfo.name().toString())
+                                        .setVisitorFunction((s, classVisitor) ->
+                                                new BaseJdbcPostgresqlEventRepositoryClassVisitor(classVisitor))
                                         .setCacheable(true)
                                         .build()
                         ));

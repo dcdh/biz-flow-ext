@@ -17,9 +17,4 @@ public final class TodoAggregateBaseJdbcPostgresqlEventRepository extends BaseJd
                                                           final Instance<AggregateRootEventPayloadSerde<TodoAggregateRoot, ?>> aggregateRootEventPayloadsSerde) {
         super(dataSource, aggregateIdInstanceCreator, aggregateRootEventPayloadsSerde);
     }
-
-    @Override
-    protected Class<TodoId> aggregateIdClazz() {
-        return TodoId.class;
-    }
 }
