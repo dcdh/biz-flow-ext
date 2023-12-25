@@ -19,21 +19,21 @@ public class BizFlowExtSerdeCodeEnhancementTest {
                             .addClass(TodoStatus.class)
                             .addClass(TodoCreated.class)
                             .addClass(TodoMarkedAsCompleted.class)
-                            .addClass(TodoCreatedAggregateRootEventPayloadSerdeToEnhance.class)
+                            .addClass(TodoCreatedAggregateRootEventPayloadSerdeEnhanced.class)
                             .addClass(UnknownTodoEvent.class));
 
     @Inject
-    TodoCreatedAggregateRootEventPayloadSerdeToEnhance todoCreatedAggregateRootEventPayloadSerdeToEnhance;
+    TodoCreatedAggregateRootEventPayloadSerdeEnhanced todoCreatedAggregateRootEventPayloadSerdeEnhanced;
 
     @Test
     public void shouldReturnAggregateRootClass() {
-        assertThat(todoCreatedAggregateRootEventPayloadSerdeToEnhance.aggregateRootClass())
+        assertThat(todoCreatedAggregateRootEventPayloadSerdeEnhanced.aggregateRootClass())
                 .isEqualTo(TodoAggregateRoot.class);
     }
 
     @Test
     public void shouldReturnAggregateRootEventPayloadClass() {
-        assertThat(todoCreatedAggregateRootEventPayloadSerdeToEnhance.aggregateRootEventPayloadClass())
+        assertThat(todoCreatedAggregateRootEventPayloadSerdeEnhanced.aggregateRootEventPayloadClass())
                 .isEqualTo(TodoCreated.class);
     }
 }

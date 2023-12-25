@@ -8,7 +8,7 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
 @Singleton
-public final class TodoCreatedAggregateRootEventPayloadSerdeToEnhance implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoCreated> {
+public final class TodoCreatedAggregateRootEventPayloadSerdeEnhanced implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoCreated> {
     @Override
     public SerializedEventPayload serialize(final TodoCreated selfAggregateRootEventPayload) {
         final String event = Json.createObjectBuilder()

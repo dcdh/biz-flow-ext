@@ -18,7 +18,7 @@ import java.time.Month;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-public class BizFlowExtAggregateRootRepositoryEnhancementTest {
+public class BizFlowExtAggregateRootRepositoryCodeEnhancementTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
