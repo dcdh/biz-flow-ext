@@ -13,6 +13,6 @@ public interface EventRepository<ID extends AggregateId, T extends AggregateRoot
             throws MissingSerdeException, EventStoreException;
 
     // Issue while returning List of AggregateRootDomainEvent<ID, T> by consumers
-    List<AggregateRootDomainEvent> loadOrderByVersionASC(AggregateRootIdentifier<ID> aggregateRootIdentifier, AggregateVersion aggregateVersion)
+    List<AggregateRootDomainEvent> loadHavingMaxVersionOrderByVersionASC(AggregateRootIdentifier<ID> aggregateRootIdentifier, AggregateVersion aggregateVersion)
             throws MissingSerdeException, EventStoreException;
 }

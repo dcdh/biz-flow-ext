@@ -82,8 +82,8 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
 
     @Override
     @Transactional
-    public List<AggregateRootDomainEvent> loadOrderByVersionASC(final AggregateRootIdentifier<ID> aggregateRootIdentifier,
-                                                                final AggregateVersion aggregateVersion)
+    public List<AggregateRootDomainEvent> loadHavingMaxVersionOrderByVersionASC(final AggregateRootIdentifier<ID> aggregateRootIdentifier,
+                                                                                final AggregateVersion aggregateVersion)
             throws MissingSerdeException, EventStoreException {
         Objects.requireNonNull(aggregateRootIdentifier);
         Objects.requireNonNull(aggregateVersion);

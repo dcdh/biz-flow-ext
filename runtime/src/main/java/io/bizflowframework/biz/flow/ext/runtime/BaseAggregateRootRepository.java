@@ -49,7 +49,7 @@ public abstract class BaseAggregateRootRepository<ID extends AggregateId, T exte
         Objects.requireNonNull(aggregateId);
         Objects.requireNonNull(aggregateVersion);
         final T instance = aggregateRootInstanceCreator.createNewInstance(clazz(), aggregateId);
-        final List<AggregateRootDomainEvent> aggregateRootEvents = eventRepository.loadOrderByVersionASC(instance.aggregateRootIdentifier(), aggregateVersion);
+        final List<AggregateRootDomainEvent> aggregateRootEvents = eventRepository.loadHavingMaxVersionOrderByVersionASC(instance.aggregateRootIdentifier(), aggregateVersion);
         if (aggregateRootEvents.size() == 0) {
             throw new UnknownAggregateRootException(instance.aggregateRootIdentifier());
         }
