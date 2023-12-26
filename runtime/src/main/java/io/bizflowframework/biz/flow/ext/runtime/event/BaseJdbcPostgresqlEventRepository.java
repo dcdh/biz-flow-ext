@@ -63,13 +63,19 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
             throws MissingSerdeException, EventStoreException {
         Objects.requireNonNull(aggregateRootIdentifier);
         try (final Connection connection = dataSource.getConnection();
-             final PreparedStatement stmt = connection.prepareStatement(
+             final PreparedStatement nbOfEventsStmt = connection.prepareStatement(
+                     "SELECT COUNT(*) AS nbOfEvents FROM T_EVENT e WHERE e.aggregaterootid = ? AND e.aggregateroottype = ?");
+             final PreparedStatement loadStmt = connection.prepareStatement(
                      "SELECT * FROM T_EVENT e WHERE e.aggregaterootid = ? AND e.aggregateroottype = ? ORDER BY e.version ASC")) {
-            stmt.setString(1, aggregateRootIdentifier.aggregateId().id());
-            stmt.setString(2, aggregateRootIdentifier.aggregateType().type());
-            final List<AggregateRootDomainEvent> aggregateRootDomainEvents = new ArrayList<>();
-            // TODO I should get the number of event to initialize list size. However, a lot of copies will be made in memory on large result set.
-            try (final ResultSet resultSet = stmt.executeQuery()) {
+            nbOfEventsStmt.setString(1, aggregateRootIdentifier.aggregateId().id());
+            nbOfEventsStmt.setString(2, aggregateRootIdentifier.aggregateType().type());
+            final ResultSet nbOfEventsResultSet = nbOfEventsStmt.executeQuery();
+            nbOfEventsResultSet.next();
+            final int nbOfEvents = nbOfEventsResultSet.getInt("nbOfEvents");
+            loadStmt.setString(1, aggregateRootIdentifier.aggregateId().id());
+            loadStmt.setString(2, aggregateRootIdentifier.aggregateType().type());
+            final List<AggregateRootDomainEvent> aggregateRootDomainEvents = new ArrayList<>(nbOfEvents);
+            try (final ResultSet resultSet = loadStmt.executeQuery()) {
                 while (resultSet.next()) {
                     aggregateRootDomainEvents.add(toAggregateRootDomainEvent(resultSet));
                 }
