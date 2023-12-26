@@ -128,8 +128,8 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
     private AggregateRootEventPayloadSerde<T, ?> getSerdeInstance(
             final AggregateType aggregateType, final EventType eventType) throws MissingSerdeException {
         return aggregateRootEventPayloadsSerde.stream()
-                .filter(instance -> aggregateType.equals(new AggregateType(instance.aggregateRootClass())))
-                .filter(instance -> eventType.equals(new EventType(instance.aggregateRootEventPayloadClass())))
+                .filter(bean -> aggregateType.equals(new AggregateType(bean.aggregateRootClass())))
+                .filter(bean -> eventType.equals(new EventType(bean.aggregateRootEventPayloadClass())))
                 .findFirst()
                 .orElseThrow(() -> new MissingSerdeException(aggregateType, eventType));
     }
