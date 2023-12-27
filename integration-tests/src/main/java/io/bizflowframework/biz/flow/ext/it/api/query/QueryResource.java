@@ -21,8 +21,8 @@ public class QueryResource {
     @GET
     @Produces("application/vnd.query-todo-v1+json")
     @Path("/{todoId}")
-    public QueryDTO getByTodoId(@PathParam("todoId") final String todoId) {
-        return new QueryDTO(queryService.getByTodoId(new TodoId(todoId)));
+    public QueryDTO getByTodoId(@PathParam("todoId") final TodoId todoId) {
+        return new QueryDTO(queryService.getByTodoId(todoId));
     }
 
 }
