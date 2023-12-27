@@ -1,10 +1,7 @@
 package io.bizflowframework.biz.flow.ext.deployment;
 
 import io.agroal.api.AgroalDataSource;
-import io.bizflowframework.biz.flow.ext.runtime.AggregateId;
-import io.bizflowframework.biz.flow.ext.runtime.AggregateRoot;
-import io.bizflowframework.biz.flow.ext.runtime.BaseAggregateRootRepository;
-import io.bizflowframework.biz.flow.ext.runtime.DefaultCreatedAtProvider;
+import io.bizflowframework.biz.flow.ext.runtime.*;
 import io.bizflowframework.biz.flow.ext.runtime.api.ExceptionsMapper;
 import io.bizflowframework.biz.flow.ext.runtime.command.Command;
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateIdInstanceCreator;
@@ -103,16 +100,20 @@ class BizFlowExtProcessor {
 
                             // constructor
                             final MethodCreator constructor = beanClassCreator.getMethodCreator(MethodDescriptor.INIT, void.class,
-                                    EventRepository.class, AggregateRootInstanceCreator.class);
+                                    EventRepository.class, AggregateRootInstanceCreator.class, Instance.class);
                             constructor.setSignature(
                                     SignatureBuilder.forMethod()
                                             .addParameterType(Type.parameterizedType(Type.classType(EventRepository.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass)))
                                             .addParameterType(Type.classType(AggregateRootInstanceCreator.class))
+                                            .addParameterType(Type.parameterizedType(Type.classType(Instance.class),
+                                                    Type.parameterizedType(Type.classType(BaseOnSavedEvent.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass),
+                                                            Type.wildcardTypeWithUpperBound(Type.parameterizedType(Type.classType(AggregateRootEventPayload.class), Type.classType(aggregateRootClass))))))
                                             .setReturnType(Type.voidType())
                                             .build());
                             constructor.setModifiers(Modifier.PUBLIC);
-                            constructor.invokeSpecialMethod(MethodDescriptor.ofConstructor(BaseAggregateRootRepository.class, EventRepository.class, AggregateRootInstanceCreator.class),
-                                    constructor.getThis(), constructor.getMethodParam(0), constructor.getMethodParam(1));
+                            constructor.invokeSpecialMethod(MethodDescriptor.ofConstructor(BaseAggregateRootRepository.class,
+                                            EventRepository.class, AggregateRootInstanceCreator.class, Instance.class),
+                                    constructor.getThis(), constructor.getMethodParam(0), constructor.getMethodParam(1), constructor.getMethodParam(2));
                             constructor.returnVoid();
 
                             // clazz
@@ -193,6 +194,22 @@ class BizFlowExtProcessor {
                         throw new IllegalStateException("Should not be here");
                     }
                 });
+    }
+
+    @BuildStep
+    void enhanceOnSavedEvent(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                             final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownSubclasses(DotName.createSimple(BaseOnSavedEvent.class))
+                .forEach(classInfo ->
+                        bytecodeTransformerBuildItemProducer.produce(
+                                new BytecodeTransformerBuildItem.Builder()
+                                        .setClassToTransform(classInfo.name().toString())
+                                        .setVisitorFunction((s, classVisitor) ->
+                                                new BaseOnSavedEventClassVisitor(classVisitor))
+                                        .setCacheable(true)
+                                        .build()
+                        ));
     }
 
     @BuildStep

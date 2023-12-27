@@ -3,20 +3,26 @@ package io.bizflowframework.biz.flow.ext.runtime;
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateRootInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
 import io.bizflowframework.biz.flow.ext.runtime.event.EventRepository;
+import io.bizflowframework.biz.flow.ext.runtime.event.EventType;
 import io.bizflowframework.biz.flow.ext.runtime.serde.MissingSerdeException;
+import jakarta.enterprise.inject.Instance;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public abstract class BaseAggregateRootRepository<ID extends AggregateId, T extends AggregateRoot<ID, T>> implements AggregateRootRepository<ID, T> {
     private final EventRepository<ID, T> eventRepository;
     private final AggregateRootInstanceCreator aggregateRootInstanceCreator;
+    private final Instance<BaseOnSavedEvent<ID, T, ? extends AggregateRootEventPayload<T>>> onSavedEvent;
 
     public BaseAggregateRootRepository(final EventRepository<ID, T> eventRepository,
-                                       final AggregateRootInstanceCreator aggregateRootInstanceCreator) {
+                                       final AggregateRootInstanceCreator aggregateRootInstanceCreator,
+                                       final Instance<BaseOnSavedEvent<ID, T, ? extends AggregateRootEventPayload<T>>> onSavedEvent) {
         this.eventRepository = Objects.requireNonNull(eventRepository);
         this.aggregateRootInstanceCreator = Objects.requireNonNull(aggregateRootInstanceCreator);
+        this.onSavedEvent = Objects.requireNonNull(onSavedEvent);
     }
 
     @Override
@@ -26,8 +32,22 @@ public abstract class BaseAggregateRootRepository<ID extends AggregateId, T exte
         while (aggregateRoot.hasDomainEvent()) {
             final AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> domainEventToSave = aggregateRoot.consumeDomainEvent();
             eventRepository.save(domainEventToSave);
+            getOnSaveEventInstances(aggregateRoot.aggregateRootIdentifier.aggregateType(), domainEventToSave.eventType())
+                    .forEach(bean -> bean.execute(
+                            domainEventToSave.aggregateRootIdentifier(),
+                            domainEventToSave.aggregateVersion(),
+                            domainEventToSave.createdAt(),
+                            domainEventToSave.payload()
+                    ));
         }
         return aggregateRoot;
+    }
+
+    private List<BaseOnSavedEvent> getOnSaveEventInstances(final AggregateType aggregateType, final EventType eventType) {
+        return onSavedEvent.stream()
+                .filter(bean -> aggregateType.equals(bean.aggregateType()))
+                .filter(bean -> eventType.equals(bean.eventType()))
+                .collect(Collectors.toList());
     }
 
     @Override
