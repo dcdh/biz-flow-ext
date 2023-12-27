@@ -1,4 +1,4 @@
-package io.bizflowframework.biz.flow.ext.it.query;
+package io.bizflowframework.biz.flow.ext.it.api.query;
 
 import io.bizflowframework.biz.flow.ext.it.TodoId;
 import jakarta.enterprise.context.ApplicationScoped;
