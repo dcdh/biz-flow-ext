@@ -6,11 +6,11 @@ import io.bizflowframework.biz.flow.ext.runtime.event.EventType;
 import java.io.Serializable;
 import java.util.Objects;
 
-public record AggregateRootDomainEvent<ID extends AggregateId, T extends AggregateRoot<ID, T>>(
+public record AggregateRootDomainEvent<ID extends AggregateId, T extends AggregateRoot<ID, T>, P extends AggregateRootEventPayload<T>>(
         AggregateRootIdentifier<ID> aggregateRootIdentifier,
         AggregateVersion aggregateVersion,
         CreatedAt createdAt,
-        AggregateRootEventPayload<T> payload) implements Serializable {
+        P payload) implements Serializable {
     public AggregateRootDomainEvent {
         Objects.requireNonNull(aggregateRootIdentifier);
         Objects.requireNonNull(aggregateVersion);
@@ -38,7 +38,7 @@ public record AggregateRootDomainEvent<ID extends AggregateId, T extends Aggrega
         return createdAt;
     }
 
-    public AggregateRootEventPayload<T> payload() {
+    public P payload() {
         return payload;
     }
 }

@@ -1,6 +1,7 @@
 package io.bizflowframework.biz.flow.ext.runtime;
 
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateRootInstanceCreator;
+import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
 import io.bizflowframework.biz.flow.ext.runtime.event.EventRepository;
 import io.bizflowframework.biz.flow.ext.runtime.serde.MissingSerdeException;
 import jakarta.transaction.Transactional;
@@ -23,7 +24,7 @@ public abstract class BaseAggregateRootRepository<ID extends AggregateId, T exte
     public T save(final T aggregateRoot) throws MissingSerdeException, EventStoreException {
         Objects.requireNonNull(aggregateRoot);
         while (aggregateRoot.hasDomainEvent()) {
-            final AggregateRootDomainEvent<ID, T> domainEventToSave = aggregateRoot.consumeDomainEvent();
+            final AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> domainEventToSave = aggregateRoot.consumeDomainEvent();
             eventRepository.save(domainEventToSave);
         }
         return aggregateRoot;

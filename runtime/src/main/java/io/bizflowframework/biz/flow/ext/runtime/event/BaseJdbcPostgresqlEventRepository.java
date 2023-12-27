@@ -35,7 +35,7 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
 
     @Override
     @Transactional
-    public void save(final AggregateRootDomainEvent<ID, T> aggregateRootDomainEvent) throws MissingSerdeException, EventStoreException {
+    public void save(final AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> aggregateRootDomainEvent) throws MissingSerdeException, EventStoreException {
         Objects.requireNonNull(aggregateRootDomainEvent);
         final AggregateRootEventPayloadSerde aggregateRootEventPayloadSerde = getSerdeInstance(
                 aggregateRootDomainEvent.aggregateType(), aggregateRootDomainEvent.eventType());
@@ -111,7 +111,7 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
         }
     }
 
-    private AggregateRootDomainEvent<ID, T> toAggregateRootDomainEvent(final ResultSet resultSet) throws SQLException, MissingSerdeException {
+    private AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> toAggregateRootDomainEvent(final ResultSet resultSet) throws SQLException, MissingSerdeException {
         final AggregateType aggregateType = new AggregateType(resultSet.getString("aggregateroottype"));
         final EventType eventType = new EventType(resultSet.getString("eventtype"));
         final AggregateRootEventPayloadSerde<T, ?> aggregateRootEventPayloadSerde = getSerdeInstance(aggregateType, eventType);

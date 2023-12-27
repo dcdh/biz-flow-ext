@@ -11,7 +11,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class AggregateRoot<ID extends AggregateId, T extends AggregateRoot<ID, T>> implements Serializable {
-    private final transient Queue<AggregateRootDomainEvent<ID, T>> unsavedAggregateRootDomainEvents = new ConcurrentLinkedQueue<>();
+    private final transient Queue<AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>>> unsavedAggregateRootDomainEvents = new ConcurrentLinkedQueue<>();
     protected final AggregateRootIdentifier<ID> aggregateRootIdentifier;
     private AggregateVersion aggregateVersion = new AggregateVersion();
     private final transient CreatedAtProvider createdAtProvider;
@@ -39,7 +39,7 @@ public abstract class AggregateRoot<ID extends AggregateId, T extends AggregateR
         Objects.requireNonNull(aggregateRootEventPayload);
         aggregateRootEventPayload.apply(this);
         aggregateVersion = aggregateVersionIncrementer.increment(aggregateVersion);
-        final AggregateRootDomainEvent<ID, T> appliedAggregateRootDomainEvent = new AggregateRootDomainEvent<>(
+        final AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> appliedAggregateRootDomainEvent = new AggregateRootDomainEvent<>(
                 aggregateRootIdentifier,
                 aggregateVersion,
                 createdAtProvider.now(),
@@ -64,7 +64,7 @@ public abstract class AggregateRoot<ID extends AggregateId, T extends AggregateR
         return !unsavedAggregateRootDomainEvents.isEmpty();
     }
 
-    final AggregateRootDomainEvent<ID, T> consumeDomainEvent() {
+    final AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> consumeDomainEvent() {
         return unsavedAggregateRootDomainEvents.poll();
     }
 
