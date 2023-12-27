@@ -41,21 +41,4 @@ public record AggregateRootDomainEvent<ID extends AggregateId, T extends Aggrega
     public AggregateRootEventPayload<T> payload() {
         return payload;
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (AggregateRootDomainEvent<?, ?>) obj;
-        return Objects.equals(this.aggregateRootIdentifier, that.aggregateRootIdentifier) &&
-               Objects.equals(this.aggregateVersion, that.aggregateVersion) &&
-               Objects.equals(this.createdAt, that.createdAt) &&
-               Objects.equals(this.payload, that.payload);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(aggregateRootIdentifier, aggregateVersion, createdAt, payload);
-    }
-
 }
