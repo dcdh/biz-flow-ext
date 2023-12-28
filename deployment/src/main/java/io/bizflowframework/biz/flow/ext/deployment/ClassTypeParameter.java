@@ -9,6 +9,7 @@ public record ClassTypeParameter(String type) {
     public ClassTypeParameter {
         Objects.requireNonNull(type);
         Validate.validState(type.startsWith("L"));
+        Validate.validState(!type.contains("."));
     }
 
     String descriptor() {
