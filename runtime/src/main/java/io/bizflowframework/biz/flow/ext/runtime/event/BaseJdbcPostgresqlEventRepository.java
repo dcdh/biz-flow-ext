@@ -7,7 +7,6 @@ import io.bizflowframework.biz.flow.ext.runtime.serde.AggregateRootEventPayloadS
 import io.bizflowframework.biz.flow.ext.runtime.serde.MissingSerdeException;
 import io.bizflowframework.biz.flow.ext.runtime.serde.SerializedEventPayload;
 import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
 
 import java.sql.Connection;
@@ -19,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Singleton
 public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, T extends AggregateRoot<ID, T>> implements EventRepository<ID, T> {
     private final AgroalDataSource dataSource;
     private final AggregateIdInstanceCreator aggregateIdInstanceCreator;
@@ -42,7 +40,7 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
         try (final Connection connection = dataSource.getConnection();
              final PreparedStatement preparedStatement = connection.prepareStatement(
                      "INSERT INTO T_EVENT (aggregaterootid, aggregateroottype, version, creationdate, eventtype, eventpayload) " +
-                     "VALUES (?, ?, ?, ?, ?, to_json(?::json))")) {
+                             "VALUES (?, ?, ?, ?, ?, to_json(?::json))")) {
             final AggregateRootIdentifier<ID> aggregateRootIdentifier = aggregateRootDomainEvent.aggregateRootIdentifier();
             final SerializedEventPayload serializedEventPayload = aggregateRootEventPayloadSerde.serialize(aggregateRootDomainEvent.payload());
             preparedStatement.setString(1, aggregateRootIdentifier.aggregateId().id());
