@@ -34,7 +34,8 @@ public class BizFlowExtAggregateRootJdbcEventRepositoryGenerationTest {
                     .addClass(TodoAggregateRootRepository.class)
                     .addClass(StubbedDefaultCreatedAtProvider.class)
                     .addClass(StubbedDefaultAggregateVersionIncrementer.class)
-                    .addAsResource("application.properties"));
+                    .addAsResource("application.properties")
+                    .addAsResource("init.sql"));
 
     @Inject
     AggregateRootRepository<TodoId, TodoAggregateRoot> todoAggregateRootRepository;

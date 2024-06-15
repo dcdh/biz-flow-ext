@@ -25,7 +25,8 @@ public class BizFlowExtSerdeTest {
                             .addClass(TodoMarkedAsCompleted.class)
                             .addClass(TodoCreatedAggregateRootEventPayloadSerde.class)
                             .addClass(UnknownTodoEvent.class)
-                    .addAsResource("application.properties"));
+                    .addAsResource("application.properties")
+                    .addAsResource("init.sql"));
 
     @Inject
     TodoCreatedAggregateRootEventPayloadSerde todoCreatedAggregateRootEventPayloadSerde;

@@ -15,7 +15,8 @@ public class ShouldFailWhenCommandIsNotARecordTest {
             .withApplicationRoot(jar -> jar
                     .addClass(TestAggregateId.class)
                     .addClass(InvalidCommand.class)
-                    .addAsResource("application.properties"))
+                    .addAsResource("application.properties")
+                    .addAsResource("init.sql"))
             .assertException(throwable -> assertThat(throwable)
                     .hasNoSuppressedExceptions()
                     .rootCause()
