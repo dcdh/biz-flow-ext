@@ -56,7 +56,7 @@ public abstract class BaseAggregateRootRepository<ID extends AggregateId, T exte
         Objects.requireNonNull(aggregateId);
         final T instance = aggregateRootInstanceCreator.createNewInstance(clazz(), aggregateId);
         final List<AggregateRootDomainEvent> aggregateRootEvents = eventRepository.loadOrderByVersionASC(instance.aggregateRootIdentifier());
-        if (aggregateRootEvents.size() == 0) {
+        if (aggregateRootEvents.isEmpty()) {
             throw new UnknownAggregateRootException(instance.aggregateRootIdentifier());
         }
         instance.loadFromHistory(aggregateRootEvents);
@@ -71,7 +71,7 @@ public abstract class BaseAggregateRootRepository<ID extends AggregateId, T exte
         Objects.requireNonNull(aggregateVersion);
         final T instance = aggregateRootInstanceCreator.createNewInstance(clazz(), aggregateId);
         final List<AggregateRootDomainEvent> aggregateRootEvents = eventRepository.loadHavingMaxVersionOrderByVersionASC(instance.aggregateRootIdentifier(), aggregateVersion);
-        if (aggregateRootEvents.size() == 0) {
+        if (aggregateRootEvents.isEmpty()) {
             throw new UnknownAggregateRootException(instance.aggregateRootIdentifier());
         }
         instance.loadFromHistory(aggregateRootEvents);

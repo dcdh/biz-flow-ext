@@ -15,6 +15,7 @@ public class ShouldFailWhenEventNotARecordTest {
                     .addClass(TodoId.class)
                     .addClass(TodoAggregateRoot.class)
                     .addClass(InvalidTodoEvent.class)
+                    .addAsResource("application.properties")
             )
             // CLASS bean [types=[io.bizflowframework.biz.flow.ext.runtime.event.EventRepository<io.bizflowframework.biz.flow.ext.test.ShouldFailWhenEventNotARecordTest$TestId, io.bizflowframework.biz.flow.ext.test.ShouldFailWhenEventNotARecordTest$TestAggregateRoot>, io.bizflowframework.biz.flow.ext.test.ShouldFailWhenEventNotARecordTest$TestAggregateRootJdbcPostgresqlEventRepositoryGenerated, java.lang.Object, io.bizflowframework.biz.flow.ext.runtime.event.BaseJdbcPostgresqlEventRepository<io.bizflowframework.biz.flow.ext.test.ShouldFailWhenEventNotARecordTest$TestId, io.bizflowframework.biz.flow.ext.test.ShouldFailWhenEventNotARecordTest$TestAggregateRoot>], qualifiers=[@Default, @Any], target=io.bizflowframework.biz.flow.ext.test.ShouldFailWhenEventNotARecordTest$TestAggregateRootJdbcPostgresqlEventRepositoryGenerated]
             .assertException(throwable -> assertThat(throwable)

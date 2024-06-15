@@ -36,7 +36,8 @@ public class BizFlowExtBaseOnSavedEventTest {
                     .addClass(StubbedDefaultAggregateVersionIncrementer.class)
                     .addClass(HandleTodoCreatedEvent.class)
                     .addClass(QueryEntity.class)
-                    .addClass(QueryService.class));
+                    .addClass(QueryService.class)
+                    .addAsResource("application.properties"));
 
     @Inject
     AggregateRootRepository<TodoId, TodoAggregateRoot> todoAggregateRootRepository;

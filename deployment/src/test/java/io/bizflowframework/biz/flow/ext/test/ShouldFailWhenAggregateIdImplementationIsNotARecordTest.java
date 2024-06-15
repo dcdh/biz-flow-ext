@@ -12,7 +12,8 @@ public class ShouldFailWhenAggregateIdImplementationIsNotARecordTest {
     @RegisterExtension
     static final QuarkusUnitTest runner = new QuarkusUnitTest()
             .withApplicationRoot(jar -> jar
-                    .addClass(InvalidAggregateId.class))
+                    .addClass(InvalidAggregateId.class)
+                    .addAsResource("application.properties"))
             .assertException(throwable -> assertThat(throwable)
                     .hasNoSuppressedExceptions()
                     .rootCause()

@@ -14,7 +14,8 @@ public class ShouldFailWhenCommandIsNotARecordTest {
     static QuarkusUnitTest runner = new QuarkusUnitTest()
             .withApplicationRoot(jar -> jar
                     .addClass(TestAggregateId.class)
-                    .addClass(InvalidCommand.class))
+                    .addClass(InvalidCommand.class)
+                    .addAsResource("application.properties"))
             .assertException(throwable -> assertThat(throwable)
                     .hasNoSuppressedExceptions()
                     .rootCause()

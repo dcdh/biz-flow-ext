@@ -20,7 +20,8 @@ public class BizFlowExtSerdeCodeEnhancementTest {
                             .addClass(TodoCreated.class)
                             .addClass(TodoMarkedAsCompleted.class)
                             .addClass(TodoCreatedAggregateRootEventPayloadSerdeEnhanced.class)
-                            .addClass(UnknownTodoEvent.class));
+                            .addClass(UnknownTodoEvent.class)
+                    .addAsResource("application.properties"));
 
     @Inject
     TodoCreatedAggregateRootEventPayloadSerdeEnhanced todoCreatedAggregateRootEventPayloadSerdeEnhanced;
