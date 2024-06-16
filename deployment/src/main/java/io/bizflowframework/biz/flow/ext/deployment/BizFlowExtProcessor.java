@@ -4,6 +4,7 @@ import io.agroal.api.AgroalDataSource;
 import io.bizflowframework.biz.flow.ext.runtime.*;
 import io.bizflowframework.biz.flow.ext.runtime.api.ExceptionsMapper;
 import io.bizflowframework.biz.flow.ext.runtime.command.Command;
+import io.bizflowframework.biz.flow.ext.runtime.command.CommandHandler;
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateIdInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateRootInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.creational.ReflectionAggregateIdInstanceCreator;
@@ -19,6 +20,7 @@ import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.ValidationPhaseBuildItem.ValidationErrorBuildItem;
+import io.quarkus.arc.processor.DotNames;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.ApplicationIndexBuildItem;
@@ -305,4 +307,21 @@ class BizFlowExtProcessor {
                     }
                 });
     }
+
+    @BuildStep
+    void registerCommandHandlersAsSingletonBean(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                                final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(DotName.createSimple(CommandHandler.class))
+                .forEach(classInfo ->
+                        additionalBeanBuildItemProducer.produce(
+                                new AdditionalBeanBuildItem.Builder()
+                                        .addBeanClasses(classInfo.name().toString())
+                                        .setUnremovable()
+                                        .setDefaultScope(DotNames.SINGLETON)
+                                        .build()
+                        )
+                );
+    }
+
 }

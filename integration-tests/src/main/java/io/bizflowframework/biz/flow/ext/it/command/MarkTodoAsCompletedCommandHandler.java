@@ -4,13 +4,11 @@ import io.bizflowframework.biz.flow.ext.it.TodoAggregateRoot;
 import io.bizflowframework.biz.flow.ext.it.TodoId;
 import io.bizflowframework.biz.flow.ext.it.UnknownTodoException;
 import io.bizflowframework.biz.flow.ext.runtime.AggregateRootRepository;
-import io.bizflowframework.biz.flow.ext.runtime.command.CommandHandler;
 import io.bizflowframework.biz.flow.ext.runtime.UnknownAggregateRootException;
-import jakarta.inject.Singleton;
+import io.bizflowframework.biz.flow.ext.runtime.command.CommandHandler;
 
 import java.util.Objects;
 
-@Singleton
 public final class MarkTodoAsCompletedCommandHandler implements CommandHandler<TodoId, TodoAggregateRoot, MarkTodoAsCompletedCommand> {
     private final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository;
 

@@ -7,11 +7,9 @@ import io.bizflowframework.biz.flow.ext.runtime.AggregateRootRepository;
 import io.bizflowframework.biz.flow.ext.runtime.CreatedAtProvider;
 import io.bizflowframework.biz.flow.ext.runtime.command.CommandHandler;
 import io.bizflowframework.biz.flow.ext.runtime.incrementer.AggregateVersionIncrementer;
-import jakarta.inject.Singleton;
 
 import java.util.Objects;
 
-@Singleton
 public final class CreateNewTodoCommandHandler implements CommandHandler<TodoId, TodoAggregateRoot, CreateNewTodoCommand> {
     private final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository;
     private final TodoIdGenerator todoIdGenerator;
