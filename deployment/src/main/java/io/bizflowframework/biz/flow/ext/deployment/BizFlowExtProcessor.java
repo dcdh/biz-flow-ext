@@ -4,6 +4,7 @@ import io.agroal.api.AgroalDataSource;
 import io.bizflowframework.biz.flow.ext.runtime.*;
 import io.bizflowframework.biz.flow.ext.runtime.api.ExceptionsMapper;
 import io.bizflowframework.biz.flow.ext.runtime.command.Command;
+import io.bizflowframework.biz.flow.ext.runtime.command.CommandHandler;
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateIdInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateRootInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.creational.ReflectionAggregateIdInstanceCreator;
@@ -303,6 +304,24 @@ class BizFlowExtProcessor {
                     } catch (final ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     }
+                });
+    }
+
+    @BuildStep
+    void registerCommandHandlersAsSingletonBean(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                                final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(DotName.createSimple(CommandHandler.class))
+                .forEach(classInfo -> {
+System.out.print("ICI DAMIEN mais lol 3!!! " + classInfo.toString());
+                    bytecodeTransformerBuildItemProducer.produce(
+                            new BytecodeTransformerBuildItem.Builder()
+                                    .setClassToTransform(classInfo.name().toString())
+                                    .setVisitorFunction((s, classVisitor) ->
+                                            new AddSingletonAnnotationClassVisitor(classVisitor))
+                                    .setCacheable(true)
+                                    .build()
+                    );
                 });
     }
 }
