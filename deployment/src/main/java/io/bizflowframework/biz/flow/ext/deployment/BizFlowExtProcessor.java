@@ -13,6 +13,7 @@ import io.bizflowframework.biz.flow.ext.runtime.event.BaseJdbcPostgresqlEventRep
 import io.bizflowframework.biz.flow.ext.runtime.event.EventRepository;
 import io.bizflowframework.biz.flow.ext.runtime.event.PostgresqlInitializer;
 import io.bizflowframework.biz.flow.ext.runtime.incrementer.DefaultAggregateVersionIncrementer;
+import io.bizflowframework.biz.flow.ext.runtime.publisher.InitializeDebeziumConnector;
 import io.bizflowframework.biz.flow.ext.runtime.serde.AggregateRootEventPayloadSerde;
 import io.quarkus.arc.DefaultBean;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
@@ -238,6 +239,11 @@ class BizFlowExtProcessor {
                 AdditionalBeanBuildItem.builder()
                         .setUnremovable()
                         .addBeanClasses(PostgresqlInitializer.class)
+                        .build());
+        additionalBeanBuildItemProducer.produce(
+                AdditionalBeanBuildItem.builder()
+                        .setUnremovable()
+                        .addBeanClasses(InitializeDebeziumConnector.class)
                         .build());
     }
 
