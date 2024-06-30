@@ -3,8 +3,6 @@ package io.bizflowframework.biz.flow.ext.deployment;
 import io.agroal.api.AgroalDataSource;
 import io.bizflowframework.biz.flow.ext.runtime.*;
 import io.bizflowframework.biz.flow.ext.runtime.api.ExceptionsMapper;
-import io.bizflowframework.biz.flow.ext.runtime.command.Command;
-import io.bizflowframework.biz.flow.ext.runtime.command.CommandHandler;
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateIdInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateRootInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.creational.ReflectionAggregateIdInstanceCreator;
@@ -15,6 +13,8 @@ import io.bizflowframework.biz.flow.ext.runtime.event.EventRepository;
 import io.bizflowframework.biz.flow.ext.runtime.event.PostgresqlInitializer;
 import io.bizflowframework.biz.flow.ext.runtime.incrementer.DefaultAggregateVersionIncrementer;
 import io.bizflowframework.biz.flow.ext.runtime.serde.AggregateRootEventPayloadSerde;
+import io.bizflowframework.biz.flow.ext.runtime.usecase.Request;
+import io.bizflowframework.biz.flow.ext.runtime.usecase.UseCase;
 import io.quarkus.arc.DefaultBean;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
@@ -273,13 +273,13 @@ class BizFlowExtProcessor {
                              final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(DotName.createSimple(Command.class))
+                .getAllKnownImplementors(DotName.createSimple(Request.class))
                 .forEach(classInfo -> {
                     try {
                         final Class<?> command = classLoader.loadClass(classInfo.name().toString());
                         if (!command.isRecord()) {
                             validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                    new IllegalStateException(String.format("Command '%s' must be a record", command.getName()))
+                                    new IllegalStateException(String.format("Request '%s' must be a record", command.getName()))
                             ));
                         }
                     } catch (final ClassNotFoundException e) {
@@ -309,10 +309,10 @@ class BizFlowExtProcessor {
     }
 
     @BuildStep
-    void registerCommandHandlersAsSingletonBean(final ApplicationIndexBuildItem applicationIndexBuildItem,
-                                                final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
+    void registerUseCasesAsSingletonBean(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                         final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(DotName.createSimple(CommandHandler.class))
+                .getAllKnownImplementors(DotName.createSimple(UseCase.class))
                 .forEach(classInfo ->
                         additionalBeanBuildItemProducer.produce(
                                 new AdditionalBeanBuildItem.Builder()

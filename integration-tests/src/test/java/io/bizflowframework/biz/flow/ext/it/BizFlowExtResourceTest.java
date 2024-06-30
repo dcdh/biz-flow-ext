@@ -1,6 +1,7 @@
 package io.bizflowframework.biz.flow.ext.it;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.module.jsv.JsonSchemaValidator;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -19,44 +20,44 @@ public class BizFlowExtResourceTest {
     @Test
     public void shouldReturnExpectedResponseWhenSerdeIsMissing() {
         given()
-                .when().get("/todo/failMissingSerde")
+                .when().post("/todo/failMissingSerde")
                 .then()
                 .log().all()
                 .statusCode(501)
-                .contentType("application/vnd.aggregate-root-error-v1+json")
+                .contentType("application/vnd.aggregate-root-error-v1+txt")
                 .body(is("Missing Serde for aggregate root type 'TodoAggregateRoot' and event type 'UnknownTodoEvent'"));
     }
 
     @Test
     public void shouldReturnExpectedResponseWhenAggregateRootIsUnknown() {
         given()
-                .when().get("/todo/failUnknownAggregate")
+                .when().post("/todo/failUnknownAggregate")
                 .then()
                 .log().all()
                 .statusCode(404)
-                .contentType("application/vnd.aggregate-root-error-v1+json")
+                .contentType("application/vnd.aggregate-root-error-v1+txt")
                 .body(is("Unknown aggregate root id 'unknown' of type 'TodoAggregateRoot'"));
     }
 
     @Test
     public void shouldReturnExpectedResponseWhenAggregateRootAtVersionIsUnknown() {
         given()
-                .when().get("/todo/failUnknownAggregateAtVersion")
+                .when().post("/todo/failUnknownAggregateAtVersion")
                 .then()
                 .log().all()
                 .statusCode(404)
-                .contentType("application/vnd.aggregate-root-error-v1+json")
+                .contentType("application/vnd.aggregate-root-error-v1+txt")
                 .body(is("Unknown aggregate root id 'todo_to_fail_at_unknown_version' of type 'TodoAggregateRoot' at version '10'"));
     }
 
     @Test
     public void shouldReturnExpectedResponseWhenDoingAForbiddenAction() {
         given()
-                .when().get("/todo/failOnActionForbidden")
+                .when().post("/todo/failOnActionForbidden")
                 .then()
                 .log().all()
                 .statusCode(403)
-                .contentType("application/vnd.event-store-error-v1+json")
+                .contentType("application/vnd.event-store-error-v1+txt")
                 .body(containsString("ERROR: not allowed"));
     }
 
@@ -73,6 +74,7 @@ public class BizFlowExtResourceTest {
                 .log().all()
                 .statusCode(200)
                 .contentType("application/vnd.todo-v1+json")
+                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/todo.json"))
                 .body("todoId", notNullValue())
                 .body("description", equalTo("lorem ipsum dolor sit amet"))
                 .body("status", equalTo("IN_PROGRESS"))
@@ -91,6 +93,7 @@ public class BizFlowExtResourceTest {
                 .log().all()
                 .statusCode(200)
                 .contentType("application/vnd.query-todo-v1+json")
+                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/todo.json"))
                 .body("todoId", equalTo(todoId))
                 .body("description", equalTo("lorem ipsum dolor sit amet"))
                 .body("status", equalTo("IN_PROGRESS"))
@@ -108,6 +111,7 @@ public class BizFlowExtResourceTest {
                 .log().all()
                 .statusCode(200)
                 .contentType("application/vnd.todo-v1+json")
+                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/todo.json"))
                 .body("todoId", equalTo(todoId))
                 .body("description", equalTo("lorem ipsum dolor sit amet"))
                 .body("status", equalTo("COMPLETED"))
@@ -125,6 +129,7 @@ public class BizFlowExtResourceTest {
                 .log().all()
                 .statusCode(200)
                 .contentType("application/vnd.query-todo-v1+json")
+                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/todo.json"))
                 .body("todoId", equalTo(todoId))
                 .body("description", equalTo("lorem ipsum dolor sit amet"))
                 .body("status", equalTo("COMPLETED"))
@@ -140,7 +145,7 @@ public class BizFlowExtResourceTest {
                 .then()
                 .log().all()
                 .statusCode(404)
-                .contentType("application/vnd.unknown-todo-v1+json")
+                .contentType("application/vnd.unknown-todo-v1+txt")
                 .body(is("Todo 'my_second_awesome_todo' is unknown"));
     }
 
@@ -170,7 +175,7 @@ public class BizFlowExtResourceTest {
                 .then()
                 .log().all()
                 .statusCode(409)
-                .contentType("application/vnd.todo-already-marked-as-completed-v1+json")
+                .contentType("application/vnd.todo-already-marked-as-completed-v1+txt")
                 .body(is(String.format("Todo '%s' already marked as completed", todoId)));
     }
 }

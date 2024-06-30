@@ -1,7 +1,6 @@
 package io.bizflowframework.biz.flow.ext.it.event;
 
 import io.bizflowframework.biz.flow.ext.it.TodoAggregateRoot;
-import io.bizflowframework.biz.flow.ext.it.TodoId;
 import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
 
 import java.util.Objects;
