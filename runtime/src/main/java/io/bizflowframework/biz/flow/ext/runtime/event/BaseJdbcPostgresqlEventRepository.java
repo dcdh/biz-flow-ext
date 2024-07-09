@@ -67,18 +67,19 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
                      "SELECT * FROM T_EVENT e WHERE e.aggregaterootid = ? AND e.aggregateroottype = ? ORDER BY e.version ASC")) {
             nbOfEventsStmt.setString(1, aggregateRootIdentifier.aggregateId().id());
             nbOfEventsStmt.setString(2, aggregateRootIdentifier.aggregateType().type());
-            final ResultSet nbOfEventsResultSet = nbOfEventsStmt.executeQuery();
-            nbOfEventsResultSet.next();
-            final int nbOfEvents = nbOfEventsResultSet.getInt("nbOfEvents");
-            loadStmt.setString(1, aggregateRootIdentifier.aggregateId().id());
-            loadStmt.setString(2, aggregateRootIdentifier.aggregateType().type());
-            final List<AggregateRootDomainEvent> aggregateRootDomainEvents = new ArrayList<>(nbOfEvents);
-            try (final ResultSet resultSet = loadStmt.executeQuery()) {
-                while (resultSet.next()) {
-                    aggregateRootDomainEvents.add(toAggregateRootDomainEvent(resultSet));
+            try (final ResultSet nbOfEventsResultSet = nbOfEventsStmt.executeQuery()) {
+                nbOfEventsResultSet.next();
+                final int nbOfEvents = nbOfEventsResultSet.getInt("nbOfEvents");
+                loadStmt.setString(1, aggregateRootIdentifier.aggregateId().id());
+                loadStmt.setString(2, aggregateRootIdentifier.aggregateType().type());
+                final List<AggregateRootDomainEvent> aggregateRootDomainEvents = new ArrayList<>(nbOfEvents);
+                try (final ResultSet resultSet = loadStmt.executeQuery()) {
+                    while (resultSet.next()) {
+                        aggregateRootDomainEvents.add(toAggregateRootDomainEvent(resultSet));
+                    }
                 }
+                return aggregateRootDomainEvents;
             }
-            return aggregateRootDomainEvents;
         } catch (final SQLException e) {
             throw new EventStoreException(e);
         }
