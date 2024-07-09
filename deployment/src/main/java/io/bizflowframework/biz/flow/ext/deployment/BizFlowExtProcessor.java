@@ -3,6 +3,7 @@ package io.bizflowframework.biz.flow.ext.deployment;
 import io.agroal.api.AgroalDataSource;
 import io.bizflowframework.biz.flow.ext.runtime.*;
 import io.bizflowframework.biz.flow.ext.runtime.api.ExceptionsMapper;
+import io.bizflowframework.biz.flow.ext.runtime.command.AggregateCommandRequest;
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateIdInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateRootInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.creational.ReflectionAggregateIdInstanceCreator;
@@ -13,8 +14,7 @@ import io.bizflowframework.biz.flow.ext.runtime.event.EventRepository;
 import io.bizflowframework.biz.flow.ext.runtime.event.PostgresqlInitializer;
 import io.bizflowframework.biz.flow.ext.runtime.incrementer.DefaultAggregateVersionIncrementer;
 import io.bizflowframework.biz.flow.ext.runtime.serde.AggregateRootEventPayloadSerde;
-import io.bizflowframework.biz.flow.ext.runtime.usecase.Request;
-import io.bizflowframework.biz.flow.ext.runtime.usecase.UseCase;
+import io.bizflowframework.biz.flow.ext.runtime.usecase.*;
 import io.quarkus.arc.DefaultBean;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
@@ -30,10 +30,18 @@ import io.quarkus.gizmo.*;
 import io.quarkus.resteasy.reactive.spi.CustomExceptionMapperBuildItem;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Singleton;
+import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.ParameterizedType;
 import org.objectweb.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 class BizFlowExtProcessor {
 
@@ -48,7 +56,7 @@ class BizFlowExtProcessor {
     void enhanceAggregateRootEventPayloadSerde(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(DotName.createSimple(AggregateRootEventPayloadSerde.class))
+                .getAllKnownImplementors(AggregateRootEventPayloadSerde.class)
                 .forEach(classInfo ->
                         bytecodeTransformerBuildItemProducer.produce(
                                 new BytecodeTransformerBuildItem.Builder()
@@ -253,7 +261,7 @@ class BizFlowExtProcessor {
                                                final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(DotName.createSimple(AggregateRootEventPayload.class))
+                .getAllKnownImplementors(AggregateRootEventPayload.class)
                 .forEach(classInfo -> {
                     try {
                         final Class<?> aggregateRootEventPayload = classLoader.loadClass(classInfo.name().toString());
@@ -269,17 +277,57 @@ class BizFlowExtProcessor {
     }
 
     @BuildStep
-    void validateCommandType(final ApplicationIndexBuildItem applicationIndexBuildItem,
-                             final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+    void validateCommandRequestType(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                    final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(DotName.createSimple(Request.class))
+                .getAllKnownImplementors(CommandRequest.class)
                 .forEach(classInfo -> {
                     try {
-                        final Class<?> command = classLoader.loadClass(classInfo.name().toString());
-                        if (!command.isRecord()) {
+                        final Class<?> commandRequest = classLoader.loadClass(classInfo.name().toString());
+                        if (!commandRequest.isRecord()) {
                             validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                    new IllegalStateException(String.format("Request '%s' must be a record", command.getName()))
+                                    new IllegalStateException(String.format("CommandRequest '%s' must be a record", commandRequest.getName()))
+                            ));
+                        }
+                    } catch (final ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @BuildStep
+    void validateAggregateCommandRequestType(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                             final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(AggregateCommandRequest.class)
+                .forEach(classInfo -> {
+                    try {
+                        final Class<?> aggregateCommandRequest = classLoader.loadClass(classInfo.name().toString());
+                        if (!aggregateCommandRequest.isRecord()) {
+                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                    new IllegalStateException(String.format("AggregateCommandRequest '%s' must be a record", aggregateCommandRequest.getName()))
+                            ));
+                        }
+                    } catch (final ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @BuildStep
+    void validateQueryRequestType(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                  final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(QueryRequest.class)
+                .forEach(classInfo -> {
+                    try {
+                        final Class<?> queryRequest = classLoader.loadClass(classInfo.name().toString());
+                        if (!queryRequest.isRecord()) {
+                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                    new IllegalStateException(String.format("QueryRequest '%s' must be a record", queryRequest.getName()))
                             ));
                         }
                     } catch (final ClassNotFoundException e) {
@@ -293,7 +341,7 @@ class BizFlowExtProcessor {
                              final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(DotName.createSimple(AggregateId.class))
+                .getAllKnownImplementors(AggregateId.class)
                 .forEach(classInfo -> {
                     try {
                         final Class<?> aggregateId = classLoader.loadClass(classInfo.name().toString());
@@ -309,10 +357,75 @@ class BizFlowExtProcessor {
     }
 
     @BuildStep
-    void registerUseCasesAsSingletonBean(final ApplicationIndexBuildItem applicationIndexBuildItem,
-                                         final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
+    void validateUseCaseExceptionNaming(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                        final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Collection<ClassInfo> allBizMutationUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(BizMutationUseCase.class);
+        final Collection<ClassInfo> allBizQueryUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(BizQueryUseCase.class);
+
+        Stream.concat(allBizMutationUseCaseImplementors.stream(),
+                        allBizQueryUseCaseImplementors.stream())
+                .forEach(classInfo -> {
+                    final List<DotName> interfaceDotNames = classInfo.interfaceNames();
+                    final int interfacePosition = IntStream.range(0, interfaceDotNames.size())
+                            .filter(index -> Arrays.asList(BizMutationUseCase.class.getName(),
+                                    BizQueryUseCase.class.getName()).contains(interfaceDotNames.get(index).toString()))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException("Should not be here"));
+                    final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
+                    assert arguments.size() == 3;
+                    final MethodInfo execute = classInfo.method("execute", arguments.get(1));
+                    final String expectedExceptionNaming = classInfo.simpleName() + "Exception";
+                    if (execute.exceptions().size() > 1) {
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("'%s' execute method must define only one exception called '%s'", classInfo.name(), expectedExceptionNaming))
+                        ));
+                    } else {
+                        final String exceptionNaming = new ExtractClassNaming().apply(execute.exceptions().getFirst());
+                        if (!expectedExceptionNaming.equals(exceptionNaming)) {
+                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                    new IllegalStateException(String.format("'%s' execute method must define an exception called '%s' got '%s'", classInfo.name(),
+                                            expectedExceptionNaming, exceptionNaming))
+                            ));
+                        }
+                    }
+                });
+    }
+
+    @BuildStep
+    void validateBizQueryProjectionType(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                        final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(DotName.createSimple(UseCase.class))
+                .getAllKnownImplementors(BizQueryUseCase.class)
+                .forEach(classInfo -> {
+                    try {
+                        final List<DotName> interfaceDotNames = classInfo.interfaceNames();
+                        final int interfacePosition = IntStream.range(0, interfaceDotNames.size())
+                                .filter(index -> interfaceDotNames.get(index).toString().equals(BizQueryUseCase.class.getName()))
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalStateException("Should not be here"));
+                        final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
+                        assert arguments.size() == 3;
+                        final org.jboss.jandex.Type projectionType = arguments.getFirst();
+                        final Class<?> projectionClass = classLoader.loadClass(projectionType.name().toString());
+
+                        if (!VersionedProjection.class.isAssignableFrom(projectionClass)
+                                && !ListOfProjection.class.isAssignableFrom(projectionClass)) {
+                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                    new IllegalStateException(String.format("BizQueryUseCase '%s' projection must implement VersionedProjection or be a ListOfProjection", classInfo.name()))
+                            ));
+                        }
+                    } catch (final ClassNotFoundException classNotFoundException) {
+                        throw new IllegalStateException("Should not be here");
+                    }
+                });
+    }
+
+    @BuildStep
+    void registerBizMutationUseCasesAsSingletonBean(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                                    final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(BizMutationUseCase.class)
                 .forEach(classInfo ->
                         additionalBeanBuildItemProducer.produce(
                                 new AdditionalBeanBuildItem.Builder()
@@ -324,4 +437,23 @@ class BizFlowExtProcessor {
                 );
     }
 
+    @BuildStep
+    void registerBizQueryUseCasesAsSingletonBean(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                                 final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(BizQueryUseCase.class)
+                .forEach(classInfo ->
+                        additionalBeanBuildItemProducer.produce(
+                                new AdditionalBeanBuildItem.Builder()
+                                        .addBeanClasses(classInfo.name().toString())
+                                        .setUnremovable()
+                                        .setDefaultScope(DotNames.SINGLETON)
+                                        .build()
+                        )
+                );
+    }
+
+    // TODO discover endpoint and check that only use cases are injected
+    // TODO check that all beans use constructor injection by scanning @Inject fields and disallow them
+    // TODO check presence of openapi annotations
 }

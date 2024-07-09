@@ -74,7 +74,7 @@ public class BizFlowExtResourceTest {
                 .log().all()
                 .statusCode(200)
                 .contentType("application/vnd.todo-v1+json")
-                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/todo.json"))
+                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/schema/TodoDTO.json"))
                 .body("todoId", notNullValue())
                 .body("description", equalTo("lorem ipsum dolor sit amet"))
                 .body("status", equalTo("IN_PROGRESS"))
@@ -88,12 +88,12 @@ public class BizFlowExtResourceTest {
         Objects.requireNonNull(todoId);
         given()
                 .pathParam("todoId", todoId)
-                .when().get("/query/{todoId}")
+                .when().get("/todo/{todoId}")
                 .then()
                 .log().all()
                 .statusCode(200)
-                .contentType("application/vnd.query-todo-v1+json")
-                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/todo.json"))
+                .contentType("application/vnd.todo-v1+json")
+                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/schema/TodoDTO.json"))
                 .body("todoId", equalTo(todoId))
                 .body("description", equalTo("lorem ipsum dolor sit amet"))
                 .body("status", equalTo("IN_PROGRESS"))
@@ -111,7 +111,7 @@ public class BizFlowExtResourceTest {
                 .log().all()
                 .statusCode(200)
                 .contentType("application/vnd.todo-v1+json")
-                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/todo.json"))
+                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/schema/TodoDTO.json"))
                 .body("todoId", equalTo(todoId))
                 .body("description", equalTo("lorem ipsum dolor sit amet"))
                 .body("status", equalTo("COMPLETED"))
@@ -124,16 +124,36 @@ public class BizFlowExtResourceTest {
         Objects.requireNonNull(todoId);
         given()
                 .pathParam("todoId", todoId)
-                .when().get("/query/{todoId}")
+                .when().get("/todo/{todoId}")
                 .then()
                 .log().all()
                 .statusCode(200)
-                .contentType("application/vnd.query-todo-v1+json")
-                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/todo.json"))
+                .contentType("application/vnd.todo-v1+json")
+                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/schema/TodoDTO.json"))
                 .body("todoId", equalTo(todoId))
                 .body("description", equalTo("lorem ipsum dolor sit amet"))
                 .body("status", equalTo("COMPLETED"))
                 .body("version", equalTo(1));
+    }
+
+    @Test
+    @Order(5)
+    public void shouldListTodo() {
+        given()
+                .queryParam("page[index]", "0")
+                .queryParam("page[size]", "20")
+                .log().all()
+                .when().get("/todo")
+                .then()
+                .log().all()
+                .statusCode(200)
+                .contentType("application/vnd.todos-v1+json")
+                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("expected/schema/ListOfTodosDTO.json"))
+                .body("todos[0].todoId", equalTo(todoId))
+                .body("todos[0].description", equalTo("lorem ipsum dolor sit amet"))
+                .body("todos[0].status", equalTo("COMPLETED"))
+                .body("todos[0].version", equalTo(1))
+                .body("nbOfElements", equalTo(1));
     }
 
     // TodoFailurePath

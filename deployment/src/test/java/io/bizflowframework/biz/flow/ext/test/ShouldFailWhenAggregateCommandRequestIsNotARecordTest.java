@@ -1,6 +1,7 @@
 package io.bizflowframework.biz.flow.ext.test;
 
 import io.bizflowframework.biz.flow.ext.runtime.AggregateId;
+import io.bizflowframework.biz.flow.ext.runtime.command.AggregateCommandRequest;
 import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -8,17 +9,18 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ShouldFailWhenAggregateIdImplementationIsNotARecordTest {
+public class ShouldFailWhenAggregateCommandRequestIsNotARecordTest {
     @RegisterExtension
-    static final QuarkusUnitTest runner = new QuarkusUnitTest()
+    static QuarkusUnitTest runner = new QuarkusUnitTest()
             .withApplicationRoot(jar -> jar
-                    .addClass(InvalidAggregateId.class)
+                    .addClass(TestAggregateId.class)
+                    .addClass(InvalidCommandRequest.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql"))
             .assertException(throwable -> assertThat(throwable)
                     .hasNoSuppressedExceptions()
                     .rootCause()
-                    .hasMessage("AggregateId 'io.bizflowframework.biz.flow.ext.test.ShouldFailWhenAggregateIdImplementationIsNotARecordTest$InvalidAggregateId' must be a record")
+                    .hasMessage("AggregateCommandRequest 'io.bizflowframework.biz.flow.ext.test.ShouldFailWhenAggregateCommandRequestIsNotARecordTest$InvalidCommandRequest' must be a record")
                     .hasNoSuppressedExceptions());
 
     @Test
@@ -26,11 +28,13 @@ public class ShouldFailWhenAggregateIdImplementationIsNotARecordTest {
         Assertions.fail("Startup should have failed");
     }
 
-    private static final class InvalidAggregateId implements AggregateId {
+    private record TestAggregateId(String id) implements AggregateId {
+    }
 
+    private static final class InvalidCommandRequest implements AggregateCommandRequest<TestAggregateId> {
         @Override
-        public String id() {
-            return null;
+        public TestAggregateId aggregateId() {
+            throw new RuntimeException("Should not be called !");
         }
     }
 }

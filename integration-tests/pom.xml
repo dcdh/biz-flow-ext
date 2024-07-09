@@ -11,6 +11,7 @@
   <name>Biz Flow Ext - Integration Tests</name>
   <properties>
     <skipITs>true</skipITs>
+    <jsonschema-generator.version>4.35.0</jsonschema-generator.version>
   </properties>
   <dependencies>
     <dependency>
@@ -21,6 +22,18 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-orm-panache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-flyway</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -40,6 +53,11 @@
     <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>json-schema-validator</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>nl.jqno.equalsverifier</groupId>
+      <artifactId>equalsverifier-nodep</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -72,6 +90,40 @@
             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
             <maven.home>${maven.home}</maven.home>
           </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.github.victools</groupId>
+        <artifactId>jsonschema-maven-plugin</artifactId>
+        <version>${jsonschema-generator.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <classNames>
+            <className>io/bizflowframework/biz/flow/ext/it/api/TodoDTO</className>
+            <className>io/bizflowframework/biz/flow/ext/it/api/ListOfTodosDTO</className>
+          </classNames>
+          <schemaVersion>DRAFT_2020_12</schemaVersion>
+          <schemaFileName>expected/schema/{0}.json</schemaFileName>
+          <schemaFilePath>src/test/resources</schemaFilePath>
+          <options>
+            <enabled>
+              <option>SCHEMA_VERSION_INDICATOR</option>
+              <option>DEFINITIONS_FOR_ALL_OBJECTS</option>
+              <option>FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT</option>
+            </enabled>
+          </options>
+          <modules>
+            <module>
+              <!-- TODO create a module for openapi -->
+              <name>Swagger2</name>
+            </module>
+          </modules>
         </configuration>
       </plugin>
     </plugins>

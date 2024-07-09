@@ -1,6 +1,6 @@
 package io.bizflowframework.biz.flow.ext.test;
 
-import io.bizflowframework.biz.flow.ext.test.event.InvalidTodoEvent;
+import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
 import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -12,9 +12,7 @@ public class ShouldFailWhenEventNotARecordTest {
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
             .withApplicationRoot(jar -> jar
-                    .addClass(TodoId.class)
-                    .addClass(TodoAggregateRoot.class)
-                    .addClass(InvalidTodoEvent.class)
+                    .addClasses(TodoId.class, TodoAggregateRoot.class, InvalidTodoEvent.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql")
             )
@@ -22,11 +20,18 @@ public class ShouldFailWhenEventNotARecordTest {
             .assertException(throwable -> assertThat(throwable)
                     .hasNoSuppressedExceptions()
                     .rootCause()
-                    .hasMessage("Domain Event 'io.bizflowframework.biz.flow.ext.test.event.InvalidTodoEvent' must be a record")
+                    .hasMessage("Domain Event 'io.bizflowframework.biz.flow.ext.test.ShouldFailWhenEventNotARecordTest$InvalidTodoEvent' must be a record")
                     .hasNoSuppressedExceptions());
 
     @Test
     public void test() {
         Assertions.fail("Startup should have failed");
+    }
+
+    private static final class InvalidTodoEvent implements AggregateRootEventPayload<TodoAggregateRoot> {
+        @Override
+        public void apply(TodoAggregateRoot aggregateRoot) {
+
+        }
     }
 }

@@ -31,6 +31,10 @@
       <artifactId>quarkus-rest-jackson-deployment</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-openapi-deployment</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.bizflowframework</groupId>
       <artifactId>biz-flow-ext</artifactId>
       <version>${project.version}</version>

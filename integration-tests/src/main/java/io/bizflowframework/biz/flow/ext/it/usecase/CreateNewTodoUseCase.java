@@ -5,12 +5,12 @@ import io.bizflowframework.biz.flow.ext.it.TodoId;
 import io.bizflowframework.biz.flow.ext.it.TodoIdGenerator;
 import io.bizflowframework.biz.flow.ext.runtime.AggregateRootRepository;
 import io.bizflowframework.biz.flow.ext.runtime.CreatedAtProvider;
-import io.bizflowframework.biz.flow.ext.runtime.usecase.UseCase;
 import io.bizflowframework.biz.flow.ext.runtime.incrementer.AggregateVersionIncrementer;
+import io.bizflowframework.biz.flow.ext.runtime.usecase.BizMutationUseCase;
 
 import java.util.Objects;
 
-public final class CreateNewTodoUseCase implements UseCase<TodoId, TodoAggregateRoot, CreateNewTodoRequest, CreateNewTodoException> {
+public final class CreateNewTodoUseCase implements BizMutationUseCase<TodoAggregateRoot, CreateNewTodoRequest, CreateNewTodoUseCaseException> {
     private final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository;
     private final TodoIdGenerator todoIdGenerator;
     private final CreatedAtProvider createdAtProvider;
@@ -27,7 +27,7 @@ public final class CreateNewTodoUseCase implements UseCase<TodoId, TodoAggregate
     }
 
     @Override
-    public TodoAggregateRoot execute(final CreateNewTodoRequest command) throws CreateNewTodoException {
+    public TodoAggregateRoot execute(final CreateNewTodoRequest command) throws CreateNewTodoUseCaseException {
         final TodoId todoIdGenerated = todoIdGenerator.generate();
         final TodoAggregateRoot newTodo = new TodoAggregateRoot(todoIdGenerated, createdAtProvider, aggregateVersionIncrementer);
         newTodo.handle(command);

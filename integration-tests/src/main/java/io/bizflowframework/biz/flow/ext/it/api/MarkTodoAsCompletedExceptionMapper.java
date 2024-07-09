@@ -2,7 +2,7 @@ package io.bizflowframework.biz.flow.ext.it.api;
 
 import io.bizflowframework.biz.flow.ext.it.TodoAlreadyMarkedAsCompletedException;
 import io.bizflowframework.biz.flow.ext.it.UnknownTodoException;
-import io.bizflowframework.biz.flow.ext.it.usecase.MarkTodoAsCompletedException;
+import io.bizflowframework.biz.flow.ext.it.usecase.MarkTodoAsCompletedUseCaseException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
@@ -13,7 +13,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 
 @Provider
-public final class MarkTodoAsCompletedExceptionMapper implements ExceptionMapper<MarkTodoAsCompletedException> {
+public final class MarkTodoAsCompletedExceptionMapper implements ExceptionMapper<MarkTodoAsCompletedUseCaseException> {
     private static final String VND_UNKNOWN_TODO_V1_TXT = "application/vnd.unknown-todo-v1+txt";
     private static final String VND_TODO_ALREADY_MARKED_AS_COMPLETED_V1_TXT = "application/vnd.todo-already-marked-as-completed-v1+txt";
     private static final String VND_MARK_TODO_AS_COMPLETED_ERROR_V1_TXT = "application/vnd.mark-todo-as-completed-error-v1+txt";
@@ -53,7 +53,7 @@ public final class MarkTodoAsCompletedExceptionMapper implements ExceptionMapper
                                     )
                             }
                     ),
-                    @APIResponse(responseCode = "500", description = "Something wrong happened",
+                    @APIResponse(responseCode = "500", description = UNKNOWN_MSG,
                             content = {
                                     @Content(
                                             mediaType = VND_MARK_TODO_AS_COMPLETED_ERROR_V1_TXT,
@@ -61,15 +61,15 @@ public final class MarkTodoAsCompletedExceptionMapper implements ExceptionMapper
                                                     implementation = String.class),
                                             examples = {
                                                     @ExampleObject(
-                                                            name = "Something wrong happened",
-                                                            value = "Something wrong happened")
+                                                            name = UNKNOWN_MSG,
+                                                            value = UNKNOWN_MSG)
                                             }
                                     )
                             }
                     )
             }
     )
-    public Response toResponse(final MarkTodoAsCompletedException exception) {
+    public Response toResponse(final MarkTodoAsCompletedUseCaseException exception) {
         return switch (exception.getCause()) {
             case UnknownTodoException unknownTodoException -> Response.status(Response.Status.NOT_FOUND)
                     .type(VND_UNKNOWN_TODO_V1_TXT)

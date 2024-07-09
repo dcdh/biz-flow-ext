@@ -1,5 +1,6 @@
 package io.bizflowframework.biz.flow.ext.it.api;
 
+import io.bizflowframework.biz.flow.ext.it.QueryTodoProjection;
 import io.bizflowframework.biz.flow.ext.it.TodoAggregateRoot;
 import io.bizflowframework.biz.flow.ext.it.TodoId;
 import io.bizflowframework.biz.flow.ext.it.usecase.*;
@@ -7,7 +8,9 @@ import io.bizflowframework.biz.flow.ext.runtime.AggregateRootRepository;
 import io.bizflowframework.biz.flow.ext.runtime.AggregateVersion;
 import io.bizflowframework.biz.flow.ext.runtime.CreatedAtProvider;
 import io.bizflowframework.biz.flow.ext.runtime.EventStoreException;
+import io.bizflowframework.biz.flow.ext.runtime.api.PagingDTO;
 import io.bizflowframework.biz.flow.ext.runtime.incrementer.AggregateVersionIncrementer;
+import io.bizflowframework.biz.flow.ext.runtime.usecase.ListOfProjection;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -29,8 +32,10 @@ import java.util.Objects;
 @Path("/todo")
 @ApplicationScoped
 public class TodoResourceEndpoint {
-    private final CreateNewTodoUseCase createNewTodoCommandHandler;
-    private final MarkTodoAsCompletedUseCase markTodoAsCompletedCommandHandler;
+    private final CreateNewTodoUseCase createNewTodoUseCase;
+    private final MarkTodoAsCompletedUseCase markTodoAsCompletedUseCase;
+    private final GetTodoUseCase getTodoUseCase;
+    private final ListTodosUseCase listTodosUseCase;
     private final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository;
     private final CreatedAtProvider createdAtProvider;
     private final AggregateVersionIncrementer aggregateVersionIncrementer;
@@ -38,12 +43,16 @@ public class TodoResourceEndpoint {
 
     public TodoResourceEndpoint(final CreateNewTodoUseCase createNewTodoUseCase,
                                 final MarkTodoAsCompletedUseCase markTodoAsCompletedUseCase,
+                                final GetTodoUseCase getTodoUseCase,
+                                final ListTodosUseCase listTodosUseCase,
                                 final AggregateRootRepository<TodoId, TodoAggregateRoot> todoAggregateRootRepository,
                                 final CreatedAtProvider createdAtProvider,
                                 final AggregateVersionIncrementer aggregateVersionIncrementer,
                                 final DataSource dataSource) {
-        this.createNewTodoCommandHandler = Objects.requireNonNull(createNewTodoUseCase);
-        this.markTodoAsCompletedCommandHandler = Objects.requireNonNull(markTodoAsCompletedUseCase);
+        this.createNewTodoUseCase = Objects.requireNonNull(createNewTodoUseCase);
+        this.markTodoAsCompletedUseCase = Objects.requireNonNull(markTodoAsCompletedUseCase);
+        this.getTodoUseCase = Objects.requireNonNull(getTodoUseCase);
+        this.listTodosUseCase = Objects.requireNonNull(listTodosUseCase);
         this.aggregateAggregateRootRepository = Objects.requireNonNull(todoAggregateRootRepository);
         this.createdAtProvider = Objects.requireNonNull(createdAtProvider);
         this.aggregateVersionIncrementer = Objects.requireNonNull(aggregateVersionIncrementer);
@@ -112,8 +121,8 @@ public class TodoResourceEndpoint {
                     )
             }
     )
-    public TodoDTO createNewTodo(@FormParam("description") final String description) throws CreateNewTodoException {
-        final TodoAggregateRoot todoCreated = createNewTodoCommandHandler.execute(new CreateNewTodoRequest(description));
+    public TodoDTO createNewTodo(@FormParam("description") final String description) throws CreateNewTodoUseCaseException {
+        final TodoAggregateRoot todoCreated = createNewTodoUseCase.execute(new CreateNewTodoRequest(description));
         return new TodoDTO(todoCreated);
     }
 
@@ -133,7 +142,7 @@ public class TodoResourceEndpoint {
                                     ),
                                     examples = {
                                             @ExampleObject(
-                                                    name = "Sensor following temperature taken",
+                                                    name = "Todo",
                                                     //language=JSON
                                                     value = """
                                                             {
@@ -149,9 +158,99 @@ public class TodoResourceEndpoint {
                     )
             }
     )
-    public TodoDTO markTodoAsCompleted(@FormParam("todoId") final String todoId) throws MarkTodoAsCompletedException {
-        final TodoAggregateRoot todoCompleted = markTodoAsCompletedCommandHandler.execute(new MarkTodoAsCompletedRequest(new TodoId(todoId)));
+    public TodoDTO markTodoAsCompleted(@FormParam("todoId") final String todoId) throws MarkTodoAsCompletedUseCaseException {
+        final TodoAggregateRoot todoCompleted = markTodoAsCompletedUseCase.execute(new MarkTodoAsCompletedRequest(new TodoId(todoId)));
         return new TodoDTO(todoCompleted);
+    }
+
+    @GET
+    @Produces("application/vnd.todos-v1+json")
+    @Path("/")
+    @RequestBody(
+            required = true,
+            content = @Content(
+                    schema = @Schema(
+                            type = SchemaType.OBJECT,
+                            implementation = PagingDTO.class
+                    )
+            )
+    )
+    @APIResponses(
+            value = {
+                    @APIResponse(
+                            name = "success",
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(
+                                            type = SchemaType.OBJECT,
+                                            implementation = ListOfTodosDTO.class
+                                    ),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "List of todos",
+                                                    //language=JSON
+                                                    value = """
+                                                            {
+                                                                "todos": [
+                                                                    {
+                                                                        "todoId": "7c22337e-06bf-41a1-a876-06e359e9d2af",
+                                                                        "description": "lorem ipsum dolor sit amet",
+                                                                        "status": "COMPLETED",
+                                                                        "version": 1
+                                                                    }
+                                                                ],
+                                                                "nbOfElements": 1
+                                                            }
+                                                            """
+                                            )
+                                    }
+                            )
+                    )
+            }
+    )
+    public ListOfTodosDTO getAll(@BeanParam final PagingDTO pagingDTO) throws ListTodosUseCaseException {
+        final ListOfProjection<QueryTodoProjection> listOf = listTodosUseCase.execute(new ListTodosRequest(pagingDTO.toPaging()));
+        return new ListOfTodosDTO(
+                listOf.projections().stream()
+                        .map(TodoDTO::new)
+                        .toList(),
+                listOf.nbOfElements().nb()
+        );
+    }
+
+    @GET
+    @Produces("application/vnd.todo-v1+json")
+    @Path("/{todoId}")
+    @APIResponses(
+            value = {
+                    @APIResponse(
+                            name = "success",
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(
+                                            type = SchemaType.OBJECT,
+                                            implementation = TodoDTO.class
+                                    ),
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "Todo",
+                                                    //language=JSON
+                                                    value = """
+                                                            {
+                                                              "todoId": "00000000-0000-0000-0000-000000000000",
+                                                              "description": "lorem ipsum dolor sit amet",
+                                                              "status": "COMPLETED",
+                                                              "version": 1
+                                                            }
+                                                            """
+                                            )
+                                    }
+                            )
+                    )
+            }
+    )
+    public TodoDTO getByTodoId(@PathParam("todoId") final TodoId todoId) throws GetTodoUseCaseException {
+        return new TodoDTO(getTodoUseCase.execute(new GetTodoRequest(todoId)));
     }
 
     @POST

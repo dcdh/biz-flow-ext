@@ -1,0 +1,25 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "$defs" : {
+    "TodoStatus" : {
+      "type" : "string",
+      "enum" : [ "IN_PROGRESS", "COMPLETED" ]
+    }
+  },
+  "type" : "object",
+  "properties" : {
+    "description" : {
+      "type" : "string"
+    },
+    "status" : {
+      "$ref" : "#/$defs/TodoStatus"
+    },
+    "todoId" : {
+      "type" : "string"
+    },
+    "version" : {
+      "type" : "integer"
+    }
+  },
+  "additionalProperties" : false
+}
