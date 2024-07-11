@@ -1,7 +1,7 @@
 package io.bizflowframework.biz.flow.ext.test;
 
 import io.bizflowframework.biz.flow.ext.runtime.AggregateId;
-import io.bizflowframework.biz.flow.ext.runtime.command.AggregateCommandRequest;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.command.AggregateCommandRequest;
 import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

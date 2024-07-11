@@ -3,7 +3,7 @@ CREATE TABLE t_query_todo
     todoid      VARCHAR(255)                   NOT NULL,
     description VARCHAR(255)                   NOT NULL,
     createdat   timestamp(6) without time zone NOT NULL,
-    todostatus  VARCHAR(255)                   NOT NULL,
+    status      VARCHAR(255)                   NOT NULL,
     version     integer
 );
 

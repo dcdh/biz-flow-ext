@@ -1,8 +1,8 @@
 package io.bizflowframework.biz.flow.ext.test;
 
 import io.bizflowframework.biz.flow.ext.runtime.AggregateVersion;
-import io.bizflowframework.biz.flow.ext.runtime.incrementer.AggregateVersionIncrementer;
-import io.bizflowframework.biz.flow.ext.runtime.incrementer.DefaultAggregateVersionIncrementer;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.incrementer.AggregateVersionIncrementer;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.incrementer.DefaultAggregateVersionIncrementer;
 import jakarta.inject.Singleton;
 
 import java.util.Objects;

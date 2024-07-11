@@ -1,5 +1,6 @@
 package io.bizflowframework.biz.flow.ext.it.api.query;
 
+import io.bizflowframework.biz.flow.ext.it.infra.postgres.QueryTodo;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.jupiter.api.Test;

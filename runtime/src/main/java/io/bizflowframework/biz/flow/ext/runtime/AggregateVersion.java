@@ -22,7 +22,7 @@ public final class AggregateVersion implements Serializable {
         return version;
     }
 
-    boolean isUninitialized() {
+    public boolean isUninitialized() {
         return UNINITIALIZED_VERSION.equals(version);
     }
 

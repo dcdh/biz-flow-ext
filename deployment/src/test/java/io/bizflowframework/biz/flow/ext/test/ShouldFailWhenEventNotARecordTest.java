@@ -1,6 +1,6 @@
 package io.bizflowframework.biz.flow.ext.test;
 
-import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.AggregateRootEventPayload;
 import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

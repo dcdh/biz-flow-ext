@@ -1,7 +1,7 @@
 package io.bizflowframework.biz.flow.ext.test.event;
 
-import io.bizflowframework.biz.flow.ext.runtime.serde.AggregateRootEventPayloadSerde;
-import io.bizflowframework.biz.flow.ext.runtime.serde.SerializedEventPayload;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.AggregateRootEventPayloadSerde;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.SerializedEventPayload;
 import io.bizflowframework.biz.flow.ext.test.TodoAggregateRoot;
 import jakarta.inject.Singleton;
 import jakarta.json.Json;

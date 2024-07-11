@@ -1,7 +1,7 @@
 package io.bizflowframework.biz.flow.ext.test;
 
 import io.agroal.api.AgroalDataSource;
-import io.bizflowframework.biz.flow.ext.runtime.AggregateRootRepository;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRootRepository;
 import io.bizflowframework.biz.flow.ext.test.event.*;
 import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;

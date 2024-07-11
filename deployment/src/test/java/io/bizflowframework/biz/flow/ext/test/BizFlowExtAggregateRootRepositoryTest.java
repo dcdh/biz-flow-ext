@@ -1,9 +1,10 @@
 package io.bizflowframework.biz.flow.ext.test;
 
 import io.agroal.api.AgroalDataSource;
-import io.bizflowframework.biz.flow.ext.runtime.*;
-import io.bizflowframework.biz.flow.ext.runtime.event.EventType;
-import io.bizflowframework.biz.flow.ext.runtime.serde.MissingSerdeException;
+import io.bizflowframework.biz.flow.ext.runtime.AggregateVersion;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.*;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.EventType;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.MissingSerdeException;
 import io.bizflowframework.biz.flow.ext.test.event.*;
 import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;

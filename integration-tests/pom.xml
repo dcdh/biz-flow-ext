@@ -105,8 +105,8 @@
         </executions>
         <configuration>
           <classNames>
-            <className>io/bizflowframework/biz/flow/ext/it/api/TodoDTO</className>
-            <className>io/bizflowframework/biz/flow/ext/it/api/ListOfTodosDTO</className>
+            <className>io/bizflowframework/biz/flow/ext/it/infra/api/TodoDTO</className>
+            <className>io/bizflowframework/biz/flow/ext/it/infra/api/ListOfTodosDTO</className>
           </classNames>
           <schemaVersion>DRAFT_2020_12</schemaVersion>
           <schemaFileName>expected/schema/{0}.json</schemaFileName>

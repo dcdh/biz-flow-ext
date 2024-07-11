@@ -1,19 +1,23 @@
 package io.bizflowframework.biz.flow.ext.deployment;
 
 import io.agroal.api.AgroalDataSource;
-import io.bizflowframework.biz.flow.ext.runtime.*;
-import io.bizflowframework.biz.flow.ext.runtime.api.ExceptionsMapper;
-import io.bizflowframework.biz.flow.ext.runtime.command.AggregateCommandRequest;
-import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateIdInstanceCreator;
-import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateRootInstanceCreator;
-import io.bizflowframework.biz.flow.ext.runtime.creational.ReflectionAggregateIdInstanceCreator;
-import io.bizflowframework.biz.flow.ext.runtime.creational.ReflectionAggregateRootInstanceCreator;
-import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
-import io.bizflowframework.biz.flow.ext.runtime.event.BaseJdbcPostgresqlEventRepository;
-import io.bizflowframework.biz.flow.ext.runtime.event.EventRepository;
-import io.bizflowframework.biz.flow.ext.runtime.event.PostgresqlInitializer;
-import io.bizflowframework.biz.flow.ext.runtime.incrementer.DefaultAggregateVersionIncrementer;
-import io.bizflowframework.biz.flow.ext.runtime.serde.AggregateRootEventPayloadSerde;
+import io.bizflowframework.biz.flow.ext.runtime.AggregateId;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRoot;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.BaseAggregateRootRepository;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.BaseOnSavedEvent;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.DefaultCreatedAtProvider;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.api.ExceptionsMapper;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.command.AggregateCommandRequest;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.creational.AggregateIdInstanceCreator;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.creational.AggregateRootInstanceCreator;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.creational.ReflectionAggregateIdInstanceCreator;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.creational.ReflectionAggregateRootInstanceCreator;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.AggregateRootEventPayload;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.BaseJdbcPostgresqlEventRepository;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.EventRepository;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.PostgresqlInitializer;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.incrementer.DefaultAggregateVersionIncrementer;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.AggregateRootEventPayloadSerde;
 import io.bizflowframework.biz.flow.ext.runtime.usecase.*;
 import io.quarkus.arc.DefaultBean;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
@@ -72,7 +76,7 @@ class BizFlowExtProcessor {
     void enhanceBaseAggregateRootRepository(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                             final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
-                .getAllKnownSubclasses(DotName.createSimple(BaseAggregateRootRepository.class))
+                .getAllKnownSubclasses(BaseAggregateRootRepository.class)
                 .forEach(classInfo ->
                         bytecodeTransformerBuildItemProducer.produce(
                                 new BytecodeTransformerBuildItem.Builder()
@@ -89,7 +93,7 @@ class BizFlowExtProcessor {
                                              final BuildProducer<GeneratedBeanBuildItem> generatedBeanBuildItemBuildProducer) {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownSubclasses(DotName.createSimple(AggregateRoot.class))
+                .getAllKnownSubclasses(AggregateRoot.class)
                 .forEach(classInfo -> {
                     try {
                         final Class<?> aggregateRootClass = classLoader.loadClass(classInfo.name().toString());
@@ -142,7 +146,7 @@ class BizFlowExtProcessor {
     void enhanceBaseJdbcPostgresqlEventRepository(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                   final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
-                .getAllKnownSubclasses(DotName.createSimple(BaseJdbcPostgresqlEventRepository.class))
+                .getAllKnownSubclasses(BaseJdbcPostgresqlEventRepository.class)
                 .forEach(classInfo ->
                         bytecodeTransformerBuildItemProducer.produce(
                                 new BytecodeTransformerBuildItem.Builder()
@@ -159,7 +163,7 @@ class BizFlowExtProcessor {
                                                    final BuildProducer<GeneratedBeanBuildItem> generatedBeanBuildItemBuildProducer) {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownSubclasses(DotName.createSimple(AggregateRoot.class))
+                .getAllKnownSubclasses(AggregateRoot.class)
                 .forEach(classInfo -> {
                     try {
                         final Class<?> aggregateRootClass = classLoader.loadClass(classInfo.name().toString());
@@ -210,7 +214,7 @@ class BizFlowExtProcessor {
     void enhanceOnSavedEvent(final ApplicationIndexBuildItem applicationIndexBuildItem,
                              final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
-                .getAllKnownSubclasses(DotName.createSimple(BaseOnSavedEvent.class))
+                .getAllKnownSubclasses(BaseOnSavedEvent.class)
                 .forEach(classInfo ->
                         bytecodeTransformerBuildItemProducer.produce(
                                 new BytecodeTransformerBuildItem.Builder()
@@ -218,6 +222,21 @@ class BizFlowExtProcessor {
                                         .setVisitorFunction((s, classVisitor) ->
                                                 new BaseOnSavedEventClassVisitor(classVisitor))
                                         .setCacheable(true)
+                                        .build()
+                        ));
+    }
+
+    @BuildStep
+    void registerBaseOnSavedEventsAsSingletonBeans(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                                   final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownSubclasses(BaseOnSavedEvent.class)
+                .forEach(classInfo ->
+                        additionalBeanBuildItemProducer.produce(
+                                new AdditionalBeanBuildItem.Builder()
+                                        .addBeanClasses(classInfo.name().toString())
+                                        .setUnremovable()
+                                        .setDefaultScope(DotNames.SINGLETON)
                                         .build()
                         ));
     }
@@ -453,6 +472,7 @@ class BizFlowExtProcessor {
                 );
     }
 
+    // TODO make use cases @Transactional on class level
     // TODO discover endpoint and check that only use cases are injected
     // TODO check that all beans use constructor injection by scanning @Inject fields and disallow them
     // TODO check presence of openapi annotations

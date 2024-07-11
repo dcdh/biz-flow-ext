@@ -1,10 +1,10 @@
 package io.bizflowframework.biz.flow.ext.test;
 
-import io.bizflowframework.biz.flow.ext.runtime.BaseAggregateRootRepository;
-import io.bizflowframework.biz.flow.ext.runtime.BaseOnSavedEvent;
-import io.bizflowframework.biz.flow.ext.runtime.creational.AggregateRootInstanceCreator;
-import io.bizflowframework.biz.flow.ext.runtime.event.AggregateRootEventPayload;
-import io.bizflowframework.biz.flow.ext.runtime.event.EventRepository;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.BaseAggregateRootRepository;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.BaseOnSavedEvent;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.creational.AggregateRootInstanceCreator;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.AggregateRootEventPayload;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.EventRepository;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Singleton;
 

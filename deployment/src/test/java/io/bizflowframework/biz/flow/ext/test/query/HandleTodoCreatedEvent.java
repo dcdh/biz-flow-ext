@@ -1,9 +1,9 @@
 package io.bizflowframework.biz.flow.ext.test.query;
 
-import io.bizflowframework.biz.flow.ext.runtime.AggregateRootIdentifier;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRootIdentifier;
 import io.bizflowframework.biz.flow.ext.runtime.AggregateVersion;
-import io.bizflowframework.biz.flow.ext.runtime.CreatedAt;
-import io.bizflowframework.biz.flow.ext.runtime.BaseOnSavedEvent;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.CreatedAt;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.BaseOnSavedEvent;
 import io.bizflowframework.biz.flow.ext.test.TodoAggregateRoot;
 import io.bizflowframework.biz.flow.ext.test.TodoId;
 import io.bizflowframework.biz.flow.ext.test.TodoStatus;
@@ -12,7 +12,6 @@ import jakarta.inject.Singleton;
 
 import java.util.Objects;
 
-@Singleton
 public final class HandleTodoCreatedEvent extends BaseOnSavedEvent<TodoId, TodoAggregateRoot, TodoCreated> {
     private final QueryService queryService;
 

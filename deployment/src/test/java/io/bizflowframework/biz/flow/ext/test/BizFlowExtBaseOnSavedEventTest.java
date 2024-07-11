@@ -1,7 +1,7 @@
 package io.bizflowframework.biz.flow.ext.test;
 
-import io.bizflowframework.biz.flow.ext.runtime.AggregateRootRepository;
-import io.bizflowframework.biz.flow.ext.runtime.CreatedAt;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRootRepository;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.CreatedAt;
 import io.bizflowframework.biz.flow.ext.test.event.*;
 import io.bizflowframework.biz.flow.ext.test.query.HandleTodoCreatedEvent;
 import io.bizflowframework.biz.flow.ext.test.query.QueryEntity;
@@ -34,7 +34,7 @@ public class BizFlowExtBaseOnSavedEventTest {
                     .addClass(TodoAggregateRootRepository.class)
                     .addClass(StubbedDefaultCreatedAtProvider.class)
                     .addClass(StubbedDefaultAggregateVersionIncrementer.class)
-                    .addClass(HandleTodoCreatedEvent.class)
+                    .addClass(HandleTodoCreatedEvent.class) // here
                     .addClass(QueryEntity.class)
                     .addClass(QueryService.class)
                     .addAsResource("application.properties")
