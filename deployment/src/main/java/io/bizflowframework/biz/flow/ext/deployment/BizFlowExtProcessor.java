@@ -35,16 +35,13 @@ import io.quarkus.resteasy.reactive.spi.CustomExceptionMapperBuildItem;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Singleton;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.ParameterizedType;
 import org.objectweb.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 class BizFlowExtProcessor {
@@ -383,31 +380,30 @@ class BizFlowExtProcessor {
 
         Stream.concat(allBizMutationUseCaseImplementors.stream(),
                         allBizQueryUseCaseImplementors.stream())
-                .forEach(classInfo -> {
-                    final List<DotName> interfaceDotNames = classInfo.interfaceNames();
-                    final int interfacePosition = IntStream.range(0, interfaceDotNames.size())
-                            .filter(index -> Arrays.asList(BizMutationUseCase.class.getName(),
-                                    BizQueryUseCase.class.getName()).contains(interfaceDotNames.get(index).toString()))
-                            .findFirst()
-                            .orElseThrow(() -> new IllegalStateException("Should not be here"));
-                    final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
-                    assert arguments.size() == 3;
-                    final MethodInfo execute = classInfo.method("execute", arguments.get(1));
-                    final String expectedExceptionNaming = classInfo.simpleName() + "Exception";
-                    if (execute.exceptions().size() > 1) {
-                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                new IllegalStateException(String.format("'%s' execute method must define only one exception called '%s'", classInfo.name(), expectedExceptionNaming))
-                        ));
-                    } else {
-                        final String exceptionNaming = new ExtractClassNaming().apply(execute.exceptions().getFirst());
-                        if (!expectedExceptionNaming.equals(exceptionNaming)) {
-                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                    new IllegalStateException(String.format("'%s' execute method must define an exception called '%s' got '%s'", classInfo.name(),
-                                            expectedExceptionNaming, exceptionNaming))
-                            ));
-                        }
-                    }
-                });
+                .forEach(classInfo ->
+                        new FindInterfaceFromClassInfo(BizMutationUseCase.class, BizQueryUseCase.class)
+                                .andThen(interfacePosition -> {
+                                    final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
+                                    assert arguments.size() == 3;
+                                    final MethodInfo execute = classInfo.method("execute", arguments.get(1));
+                                    final String expectedExceptionNaming = classInfo.simpleName() + "Exception";
+                                    if (execute.exceptions().size() > 1) {
+                                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                                new IllegalStateException(String.format("'%s' execute method must define only one exception called '%s'", classInfo.name(), expectedExceptionNaming))
+                                        ));
+                                    } else {
+                                        final String exceptionNaming = new ExtractClassNaming().apply(execute.exceptions().getFirst());
+                                        if (!expectedExceptionNaming.equals(exceptionNaming)) {
+                                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                                    new IllegalStateException(String.format("'%s' execute method must define an exception called '%s' got '%s'", classInfo.name(),
+                                                            expectedExceptionNaming, exceptionNaming))
+                                            ));
+                                        }
+                                    }
+                                    return null;
+                                })
+                                .apply(classInfo)
+                );
     }
 
     @BuildStep
@@ -416,28 +412,28 @@ class BizFlowExtProcessor {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizQueryUseCase.class)
-                .forEach(classInfo -> {
-                    try {
-                        final List<DotName> interfaceDotNames = classInfo.interfaceNames();
-                        final int interfacePosition = IntStream.range(0, interfaceDotNames.size())
-                                .filter(index -> interfaceDotNames.get(index).toString().equals(BizQueryUseCase.class.getName()))
-                                .findFirst()
-                                .orElseThrow(() -> new IllegalStateException("Should not be here"));
-                        final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
-                        assert arguments.size() == 3;
-                        final org.jboss.jandex.Type projectionType = arguments.getFirst();
-                        final Class<?> projectionClass = classLoader.loadClass(projectionType.name().toString());
+                .forEach(classInfo ->
+                        new FindInterfaceFromClassInfo(BizQueryUseCase.class)
+                                .andThen(interfacePosition -> {
+                                    try {
+                                        final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
+                                        assert arguments.size() == 3;
+                                        final org.jboss.jandex.Type projectionType = arguments.getFirst();
+                                        final Class<?> projectionClass = classLoader.loadClass(projectionType.name().toString());
 
-                        if (!VersionedProjection.class.isAssignableFrom(projectionClass)
-                                && !ListOfProjection.class.isAssignableFrom(projectionClass)) {
-                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                    new IllegalStateException(String.format("BizQueryUseCase '%s' projection must implement VersionedProjection or be a ListOfProjection", classInfo.name()))
-                            ));
-                        }
-                    } catch (final ClassNotFoundException classNotFoundException) {
-                        throw new IllegalStateException("Should not be here");
-                    }
-                });
+                                        if (!VersionedProjection.class.isAssignableFrom(projectionClass)
+                                                && !ListOfProjection.class.isAssignableFrom(projectionClass)) {
+                                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                                    new IllegalStateException(String.format("BizQueryUseCase '%s' projection must implement VersionedProjection or be a ListOfProjection", classInfo.name()))
+                                            ));
+                                        }
+                                        return null;
+                                    } catch (final ClassNotFoundException classNotFoundException) {
+                                        throw new IllegalStateException("Should not be here");
+                                    }
+                                })
+                                .apply(classInfo)
+                );
     }
 
     @BuildStep
