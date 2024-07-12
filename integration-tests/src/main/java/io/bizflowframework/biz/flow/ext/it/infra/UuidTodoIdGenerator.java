@@ -1,5 +1,7 @@
-package io.bizflowframework.biz.flow.ext.it.domain;
+package io.bizflowframework.biz.flow.ext.it.infra;
 
+import io.bizflowframework.biz.flow.ext.it.domain.TodoId;
+import io.bizflowframework.biz.flow.ext.it.domain.TodoIdGenerator;
 import jakarta.inject.Singleton;
 
 import java.util.UUID;

@@ -1,6 +1,7 @@
-package io.bizflowframework.biz.flow.ext.it.domain.event;
+package io.bizflowframework.biz.flow.ext.it.infra.event;
 
 import io.bizflowframework.biz.flow.ext.it.domain.TodoAggregateRoot;
+import io.bizflowframework.biz.flow.ext.it.domain.event.TodoCreated;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.AggregateRootEventPayloadSerde;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.SerializedEventPayload;
 import jakarta.inject.Singleton;
