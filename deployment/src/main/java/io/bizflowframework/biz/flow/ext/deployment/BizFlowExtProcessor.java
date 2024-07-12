@@ -392,13 +392,17 @@ class BizFlowExtProcessor {
                                                 new IllegalStateException(String.format("'%s' execute method must define only one exception called '%s'", classInfo.name(), expectedExceptionNaming))
                                         ));
                                     } else {
-                                        final String exceptionNaming = new ExtractClassNaming().apply(execute.exceptions().getFirst());
-                                        if (!expectedExceptionNaming.equals(exceptionNaming)) {
-                                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                                    new IllegalStateException(String.format("'%s' execute method must define an exception called '%s' got '%s'", classInfo.name(),
-                                                            expectedExceptionNaming, exceptionNaming))
-                                            ));
-                                        }
+                                        new ExtractClassNaming()
+                                                .andThen(exceptionNaming -> {
+                                                    if (!expectedExceptionNaming.equals(exceptionNaming)) {
+                                                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                                                new IllegalStateException(String.format("'%s' execute method must define an exception called '%s' got '%s'", classInfo.name(),
+                                                                        expectedExceptionNaming, exceptionNaming))
+                                                        ));
+                                                    }
+                                                    return null;
+                                                })
+                                                .apply(execute.exceptions().getFirst());
                                     }
                                     return null;
                                 })
