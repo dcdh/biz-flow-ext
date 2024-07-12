@@ -81,6 +81,7 @@ public final class BaseOnSavedEventClassVisitor extends ClassVisitor {
             aggregateRootEventPayloadClassMethod.visitMaxs(1, 1);
             aggregateRootEventPayloadClassMethod.visitEnd();
         }
+        new ApplyTransactionAnnotation().apply(this);
         super.visitEnd();
     }
 }

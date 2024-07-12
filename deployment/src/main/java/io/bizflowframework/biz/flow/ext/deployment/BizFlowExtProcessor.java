@@ -457,6 +457,22 @@ class BizFlowExtProcessor {
     }
 
     @BuildStep
+    void enhanceBizMutationUseCase(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                   final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(BizMutationUseCase.class)
+                .forEach(classInfo ->
+                        bytecodeTransformerBuildItemProducer.produce(
+                                new BytecodeTransformerBuildItem.Builder()
+                                        .setClassToTransform(classInfo.name().toString())
+                                        .setVisitorFunction((s, classVisitor) ->
+                                                new BizMutationUseCaseClassVisitor(classVisitor))
+                                        .setCacheable(true)
+                                        .build()
+                        ));
+    }
+
+    @BuildStep
     void registerBizQueryUseCasesAsSingletonBean(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                  final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
@@ -472,7 +488,22 @@ class BizFlowExtProcessor {
                 );
     }
 
-    // TODO make use cases @Transactional on class level
+    @BuildStep
+    void enhanceBizQueryUseCase(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(BizQueryUseCase.class)
+                .forEach(classInfo ->
+                        bytecodeTransformerBuildItemProducer.produce(
+                                new BytecodeTransformerBuildItem.Builder()
+                                        .setClassToTransform(classInfo.name().toString())
+                                        .setVisitorFunction((s, classVisitor) ->
+                                                new BizQueryUseCaseClassVisitor(classVisitor))
+                                        .setCacheable(true)
+                                        .build()
+                        ));
+    }
+
     // TODO discover endpoint and check that only use cases are injected
     // TODO check that all beans use constructor injection by scanning @Inject fields and disallow them
     // TODO check presence of openapi annotations
