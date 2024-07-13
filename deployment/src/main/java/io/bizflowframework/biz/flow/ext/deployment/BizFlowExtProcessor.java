@@ -100,7 +100,9 @@ class BizFlowExtProcessor {
                 .forEach(classInfo -> {
                     try {
                         final Class<?> aggregateRootClass = classLoader.loadClass(classInfo.name().toString());
-                        final Class<?> aggregateIdClass = classLoader.loadClass(classInfo.superClassType().asParameterizedType().arguments().get(0).toString());
+                        assert AggregateRoot.class.isAssignableFrom(aggregateRootClass);
+                        final Class<?> aggregateIdClass = classLoader.loadClass(classInfo.superClassType().asParameterizedType().arguments().getFirst().toString());
+                        assert AggregateId.class.isAssignableFrom(aggregateIdClass);
                         try (final ClassCreator beanClassCreator = ClassCreator.builder()
                                 .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer))
                                 .className(classInfo.name() + "RepositoryGenerated")
@@ -170,7 +172,9 @@ class BizFlowExtProcessor {
                 .forEach(classInfo -> {
                     try {
                         final Class<?> aggregateRootClass = classLoader.loadClass(classInfo.name().toString());
-                        final Class<?> aggregateIdClass = classLoader.loadClass(classInfo.superClassType().asParameterizedType().arguments().get(0).toString());
+                        assert AggregateRoot.class.isAssignableFrom(aggregateRootClass);
+                        final Class<?> aggregateIdClass = classLoader.loadClass(classInfo.superClassType().asParameterizedType().arguments().getFirst().toString());
+                        assert AggregateId.class.isAssignableFrom(aggregateIdClass);
                         try (final ClassCreator beanClassCreator = ClassCreator.builder()
                                 .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer))
                                 .className(classInfo.name() + "JdbcPostgresqlEventRepositoryGenerated")
@@ -287,6 +291,7 @@ class BizFlowExtProcessor {
                 .forEach(classInfo -> {
                     try {
                         final Class<?> aggregateRootEventPayload = classLoader.loadClass(classInfo.name().toString());
+                        assert AggregateRootEventPayload.class.isAssignableFrom(aggregateRootEventPayload);
                         if (!aggregateRootEventPayload.isRecord()) {
                             validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                     new IllegalStateException(String.format("Domain Event '%s' must be a record", aggregateRootEventPayload.getName()))
@@ -307,6 +312,7 @@ class BizFlowExtProcessor {
                 .forEach(classInfo -> {
                     try {
                         final Class<?> commandRequest = classLoader.loadClass(classInfo.name().toString());
+                        assert CommandRequest.class.isAssignableFrom(commandRequest);
                         if (!commandRequest.isRecord()) {
                             validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                     new IllegalStateException(String.format("CommandRequest '%s' must be a record", commandRequest.getName()))
@@ -327,6 +333,7 @@ class BizFlowExtProcessor {
                 .forEach(classInfo -> {
                     try {
                         final Class<?> aggregateCommandRequest = classLoader.loadClass(classInfo.name().toString());
+                        assert AggregateCommandRequest.class.isAssignableFrom(aggregateCommandRequest);
                         if (!aggregateCommandRequest.isRecord()) {
                             validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                     new IllegalStateException(String.format("AggregateCommandRequest '%s' must be a record", aggregateCommandRequest.getName()))
@@ -347,6 +354,7 @@ class BizFlowExtProcessor {
                 .forEach(classInfo -> {
                     try {
                         final Class<?> queryRequest = classLoader.loadClass(classInfo.name().toString());
+                        assert QueryRequest.class.isAssignableFrom(queryRequest);
                         if (!queryRequest.isRecord()) {
                             validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                     new IllegalStateException(String.format("QueryRequest '%s' must be a record", queryRequest.getName()))
@@ -367,6 +375,7 @@ class BizFlowExtProcessor {
                 .forEach(classInfo -> {
                     try {
                         final Class<?> aggregateId = classLoader.loadClass(classInfo.name().toString());
+                        assert AggregateId.class.isAssignableFrom(aggregateId);
                         if (!aggregateId.isRecord()) {
                             validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                     new IllegalStateException(String.format("AggregateId '%s' must be a record", aggregateId.getName()))
