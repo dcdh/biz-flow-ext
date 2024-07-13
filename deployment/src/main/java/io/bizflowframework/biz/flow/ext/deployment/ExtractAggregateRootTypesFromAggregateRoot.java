@@ -4,7 +4,7 @@ import org.jboss.jandex.ClassInfo;
 
 import java.util.function.Function;
 
-public record AggregateRootTypesExtractor() implements Function<ClassInfo, AggregateRootTypes> {
+public record ExtractAggregateRootTypesFromAggregateRoot() implements Function<ClassInfo, AggregateRootTypes> {
     @Override
     public AggregateRootTypes apply(final ClassInfo classInfo) {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();

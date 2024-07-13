@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-public record GetInterfaceParameterizedTypeFromClassInfo(
+public record ExtractInterfaceParameterizedTypeFromClassInfo(
         List<Class<?>> interfacesToFind) implements Function<ClassInfo, ParameterizedType> {
 
-    public GetInterfaceParameterizedTypeFromClassInfo(final Class<?>... interfacesToFind) {
+    public ExtractInterfaceParameterizedTypeFromClassInfo(final Class<?>... interfacesToFind) {
         this(Arrays.asList(interfacesToFind));
     }
 
-    public GetInterfaceParameterizedTypeFromClassInfo(final Class<?> interfaceToFind) {
+    public ExtractInterfaceParameterizedTypeFromClassInfo(final Class<?> interfaceToFind) {
         this(List.of(interfaceToFind));
     }
 

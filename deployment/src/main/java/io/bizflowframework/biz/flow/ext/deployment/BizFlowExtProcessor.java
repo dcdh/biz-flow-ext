@@ -41,7 +41,6 @@ import org.objectweb.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -80,14 +79,14 @@ class BizFlowExtProcessor {
     @BuildStep
     void validateOnlyOneSerdeImplementationPerAggregateRootAndAggregateRootEventPayload(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                                                         final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
-        final Map<AggregateRootEventPayloadSerdeKey, List<ClassInfo>> collect = applicationIndexBuildItem.getIndex()
+        final Map<AggregateRootEventPayloadSerdeKey, List<ClassInfo>> serdeImplementationsByAggregateRootAndEventPayload = applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(AggregateRootEventPayloadSerde.class)
                 .stream()
                 .collect(Collectors.groupingBy(
-                        classInfo -> new GetInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayloadSerde.class)
-                                .andThen(new AggregateRootEventPayloadSerdeKeyExtractor())
+                        classInfo -> new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayloadSerde.class)
+                                .andThen(new ExtractAggregateRootEventPayloadSerdeKey())
                                 .apply(classInfo)));
-        collect
+        serdeImplementationsByAggregateRootAndEventPayload
                 .forEach((key, classInfos) -> {
                     if (classInfos.size() > 1) {
                         final String implementations = classInfos.stream().map(classInfo -> classInfo.name().toString())
@@ -123,7 +122,7 @@ class BizFlowExtProcessor {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownSubclasses(AggregateRoot.class)
                 .forEach(classInfo ->
-                        new AggregateRootTypesExtractor()
+                        new ExtractAggregateRootTypesFromAggregateRoot()
                                 .andThen(aggregateRootTypes -> {
                                     final Class<?> aggregateRootClass = aggregateRootTypes.aggregateRootClass();
                                     final Class<?> aggregateIdClass = aggregateRootTypes.aggregateIdClass();
@@ -193,7 +192,7 @@ class BizFlowExtProcessor {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownSubclasses(AggregateRoot.class)
                 .forEach(classInfo ->
-                        new AggregateRootTypesExtractor()
+                        new ExtractAggregateRootTypesFromAggregateRoot()
                                 .andThen(aggregateRootTypes -> {
                                     final Class<?> aggregateRootClass = aggregateRootTypes.aggregateRootClass();
                                     final Class<?> aggregateIdClass = aggregateRootTypes.aggregateIdClass();
@@ -418,7 +417,7 @@ class BizFlowExtProcessor {
         Stream.concat(allBizMutationUseCaseImplementors.stream(),
                         allBizQueryUseCaseImplementors.stream())
                 .forEach(classInfo ->
-                        new GetInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class, BizQueryUseCase.class)
+                        new ExtractInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class, BizQueryUseCase.class)
                                 .andThen(parameterizedType -> {
                                     final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
                                     assert arguments.size() == 3;
@@ -475,7 +474,7 @@ class BizFlowExtProcessor {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizMutationUseCase.class)
                 .forEach(classInfo ->
-                        new GetInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class)
+                        new ExtractInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class)
                                 .andThen(parameterizedType -> {
                                     final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
                                     assert arguments.size() == 3;
@@ -510,7 +509,7 @@ class BizFlowExtProcessor {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizQueryUseCase.class)
                 .forEach(classInfo ->
-                        new GetInterfaceParameterizedTypeFromClassInfo(BizQueryUseCase.class)
+                        new ExtractInterfaceParameterizedTypeFromClassInfo(BizQueryUseCase.class)
                                 .andThen(parameterizedType -> {
                                     try {
                                         final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
@@ -555,7 +554,7 @@ class BizFlowExtProcessor {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizQueryUseCase.class)
                 .forEach(classInfo ->
-                        new GetInterfaceParameterizedTypeFromClassInfo(BizQueryUseCase.class)
+                        new ExtractInterfaceParameterizedTypeFromClassInfo(BizQueryUseCase.class)
                                 .andThen(parameterizedType -> {
                                     final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
                                     assert arguments.size() == 3;

@@ -5,7 +5,7 @@ import org.jboss.jandex.ParameterizedType;
 import java.util.List;
 import java.util.function.Function;
 
-public record AggregateRootEventPayloadSerdeKeyExtractor() implements Function<ParameterizedType, AggregateRootEventPayloadSerdeKey> {
+public record ExtractAggregateRootEventPayloadSerdeKey() implements Function<ParameterizedType, AggregateRootEventPayloadSerdeKey> {
 
     @Override
     public AggregateRootEventPayloadSerdeKey apply(final ParameterizedType type) {
