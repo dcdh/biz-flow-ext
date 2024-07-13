@@ -32,27 +32,27 @@ import java.util.Objects;
 @Path("/todo")
 @ApplicationScoped
 public class TodoResourceEndpoint {
-    private final CreateNewTodoUseCase createNewTodoUseCase;
-    private final MarkTodoAsCompletedUseCase markTodoAsCompletedUseCase;
-    private final GetTodoUseCase getTodoUseCase;
-    private final ListTodosUseCase listTodosUseCase;
+    private final CreateNewTodoBizMutationUseCase createNewTodoBizMutationUseCase;
+    private final MarkTodoAsCompletedBizMutationUseCase markTodoAsCompletedBizMutationUseCase;
+    private final GetTodoBizQueryUseCase getTodoBizQueryUseCase;
+    private final ListTodosBizQueryUseCase listTodosBizQueryUseCase;
     private final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository;
     private final CreatedAtProvider createdAtProvider;
     private final AggregateVersionIncrementer aggregateVersionIncrementer;
     private final DataSource dataSource;
 
-    public TodoResourceEndpoint(final CreateNewTodoUseCase createNewTodoUseCase,
-                                final MarkTodoAsCompletedUseCase markTodoAsCompletedUseCase,
-                                final GetTodoUseCase getTodoUseCase,
-                                final ListTodosUseCase listTodosUseCase,
+    public TodoResourceEndpoint(final CreateNewTodoBizMutationUseCase createNewTodoBizMutationUseCase,
+                                final MarkTodoAsCompletedBizMutationUseCase markTodoAsCompletedBizMutationUseCase,
+                                final GetTodoBizQueryUseCase getTodoBizQueryUseCase,
+                                final ListTodosBizQueryUseCase listTodosBizQueryUseCase,
                                 final AggregateRootRepository<TodoId, TodoAggregateRoot> todoAggregateRootRepository,
                                 final CreatedAtProvider createdAtProvider,
                                 final AggregateVersionIncrementer aggregateVersionIncrementer,
                                 final DataSource dataSource) {
-        this.createNewTodoUseCase = Objects.requireNonNull(createNewTodoUseCase);
-        this.markTodoAsCompletedUseCase = Objects.requireNonNull(markTodoAsCompletedUseCase);
-        this.getTodoUseCase = Objects.requireNonNull(getTodoUseCase);
-        this.listTodosUseCase = Objects.requireNonNull(listTodosUseCase);
+        this.createNewTodoBizMutationUseCase = Objects.requireNonNull(createNewTodoBizMutationUseCase);
+        this.markTodoAsCompletedBizMutationUseCase = Objects.requireNonNull(markTodoAsCompletedBizMutationUseCase);
+        this.getTodoBizQueryUseCase = Objects.requireNonNull(getTodoBizQueryUseCase);
+        this.listTodosBizQueryUseCase = Objects.requireNonNull(listTodosBizQueryUseCase);
         this.aggregateAggregateRootRepository = Objects.requireNonNull(todoAggregateRootRepository);
         this.createdAtProvider = Objects.requireNonNull(createdAtProvider);
         this.aggregateVersionIncrementer = Objects.requireNonNull(aggregateVersionIncrementer);
@@ -121,8 +121,8 @@ public class TodoResourceEndpoint {
                     )
             }
     )
-    public TodoDTO createNewTodo(@FormParam("description") final String description) throws CreateNewTodoUseCaseException {
-        final TodoAggregateRoot todoCreated = createNewTodoUseCase.execute(new CreateNewTodoRequest(description));
+    public TodoDTO createNewTodo(@FormParam("description") final String description) throws CreateNewTodoBizMutationUseCaseException {
+        final TodoAggregateRoot todoCreated = createNewTodoBizMutationUseCase.execute(new CreateNewTodoCommandRequest(description));
         return new TodoDTO(todoCreated);
     }
 
@@ -158,8 +158,8 @@ public class TodoResourceEndpoint {
                     )
             }
     )
-    public TodoDTO markTodoAsCompleted(@FormParam("todoId") final String todoId) throws MarkTodoAsCompletedUseCaseException {
-        final TodoAggregateRoot todoCompleted = markTodoAsCompletedUseCase.execute(new MarkTodoAsCompletedRequest(new TodoId(todoId)));
+    public TodoDTO markTodoAsCompleted(@FormParam("todoId") final String todoId) throws MarkTodoAsCompletedBizMutationUseCaseException {
+        final TodoAggregateRoot todoCompleted = markTodoAsCompletedBizMutationUseCase.execute(new MarkTodoAsCompletedCommandRequest(new TodoId(todoId)));
         return new TodoDTO(todoCompleted);
     }
 
@@ -208,8 +208,8 @@ public class TodoResourceEndpoint {
                     )
             }
     )
-    public ListOfTodosDTO listTodos(@BeanParam final PagingDTO pagingDTO) throws ListTodosUseCaseException {
-        final ListOfProjection<QueryTodoProjection> listOf = listTodosUseCase.execute(new ListTodosRequest(pagingDTO.toPaging()));
+    public ListOfTodosDTO listTodos(@BeanParam final PagingDTO pagingDTO) throws ListTodosBizQueryUseCaseException {
+        final ListOfProjection<QueryTodoProjection> listOf = listTodosBizQueryUseCase.execute(new ListTodosQueryRequest(pagingDTO.toPaging()));
         return new ListOfTodosDTO(
                 listOf.projections().stream()
                         .map(TodoDTO::new)
@@ -249,8 +249,8 @@ public class TodoResourceEndpoint {
                     )
             }
     )
-    public TodoDTO getByTodoId(@PathParam("todoId") final TodoId todoId) throws GetTodoUseCaseException {
-        return new TodoDTO(getTodoUseCase.execute(new GetTodoRequest(todoId)));
+    public TodoDTO getByTodoId(@PathParam("todoId") final TodoId todoId) throws GetTodoBizQueryUseCaseException {
+        return new TodoDTO(getTodoBizQueryUseCase.execute(new GetTodoQueryRequest(todoId)));
     }
 
     @POST
@@ -274,7 +274,7 @@ public class TodoResourceEndpoint {
         final AggregateVersion givenUnknownAggregateVersion = new AggregateVersion(10);
         final TodoAggregateRoot givenTodoAggregateRoot = new TodoAggregateRoot(
                 new TodoId("todo_to_fail_at_unknown_version"), createdAtProvider, aggregateVersionIncrementer);
-        givenTodoAggregateRoot.handle(new CreateNewTodoRequest("lorem ipsum dolor sit amet"));
+        givenTodoAggregateRoot.handle(new CreateNewTodoCommandRequest("lorem ipsum dolor sit amet"));
         aggregateAggregateRootRepository.save(givenTodoAggregateRoot);
         aggregateAggregateRootRepository.load(new TodoId("todo_to_fail_at_unknown_version"), givenUnknownAggregateVersion);
     }

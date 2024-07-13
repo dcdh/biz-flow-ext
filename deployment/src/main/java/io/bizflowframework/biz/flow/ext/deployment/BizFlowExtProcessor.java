@@ -37,6 +37,7 @@ import jakarta.inject.Singleton;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.ParameterizedType;
+import org.jboss.logging.Logger;
 import org.objectweb.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
@@ -45,8 +46,13 @@ import java.util.List;
 import java.util.stream.Stream;
 
 class BizFlowExtProcessor {
+    private static final Logger LOGGER = Logger.getLogger(BizFlowExtProcessor.class);
 
     private static final String FEATURE = "biz-flow-ext";
+
+    private static final String BIZ_MUTATION_USE_CASE_SIMPLE_NAME = BizMutationUseCase.class.getSimpleName();
+
+    private static final String BIZ_QUERY_USE_CASE_SIMPLE_NAME = BizQueryUseCase.class.getSimpleName();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -392,22 +398,44 @@ class BizFlowExtProcessor {
                                                 new IllegalStateException(String.format("'%s' execute method must define only one exception called '%s'", classInfo.name(), expectedExceptionNaming))
                                         ));
                                     } else {
-                                        new ExtractClassNaming()
-                                                .andThen(exceptionNaming -> {
-                                                    if (!expectedExceptionNaming.equals(exceptionNaming)) {
-                                                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                                                new IllegalStateException(String.format("'%s' execute method must define an exception called '%s' got '%s'", classInfo.name(),
-                                                                        expectedExceptionNaming, exceptionNaming))
-                                                        ));
-                                                    }
-                                                    return null;
-                                                })
-                                                .apply(execute.exceptions().getFirst());
+                                        if (classInfo.simpleName().endsWith(BIZ_MUTATION_USE_CASE_SIMPLE_NAME)
+                                                || classInfo.simpleName().endsWith(BIZ_QUERY_USE_CASE_SIMPLE_NAME)) {
+                                            new ExtractClassNaming()
+                                                    .andThen(exceptionNaming -> {
+                                                        if (!expectedExceptionNaming.equals(exceptionNaming)) {
+                                                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                                                    new IllegalStateException(String.format("'%s' execute method must define an exception called '%s' got '%s'", classInfo.name(),
+                                                                            expectedExceptionNaming, exceptionNaming))
+                                                            ));
+                                                        }
+                                                        return null;
+                                                    })
+                                                    .apply(execute.exceptions().getFirst());
+                                        } else {
+                                            LOGGER.warnf("Unable to validate exception naming for '%s' because the use case is bad named to check it. Use case naming will fail via 'validateBizMutationUseCaseNaming' or 'validateBizQueryUseCaseNaming' build steps.",
+                                                    classInfo.simpleName());
+                                        }
                                     }
                                     return null;
                                 })
                                 .apply(classInfo)
                 );
+    }
+
+    @BuildStep
+    void validateBizMutationUseCaseNaming(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                          final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(BizMutationUseCase.class)
+                .stream()
+                .map(ClassInfo::simpleName)
+                .filter(bizQueryUseCaseSimpleName -> !bizQueryUseCaseSimpleName.endsWith(BIZ_MUTATION_USE_CASE_SIMPLE_NAME))
+                .forEach(badNamingBizQueryUseCaseSimpleName -> {
+                    validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                            new IllegalStateException(String.format("Bad naming for '%s', must end with '%s'",
+                                    badNamingBizQueryUseCaseSimpleName, BIZ_MUTATION_USE_CASE_SIMPLE_NAME))
+                    ));
+                });
     }
 
     @BuildStep
@@ -420,7 +448,7 @@ class BizFlowExtProcessor {
                                 .andThen(interfacePosition -> {
                                     final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
                                     assert arguments.size() == 3;
-                                    final int indexOfBizMutationUseCase = classInfo.simpleName().indexOf("BizMutationUseCase");
+                                    final int indexOfBizMutationUseCase = classInfo.simpleName().indexOf(BIZ_MUTATION_USE_CASE_SIMPLE_NAME);
                                     if (indexOfBizMutationUseCase > -1) {
                                         final String expectedNaming = classInfo.simpleName().substring(0, indexOfBizMutationUseCase) + "CommandRequest";
                                         new ExtractClassNaming()
@@ -435,8 +463,8 @@ class BizFlowExtProcessor {
                                                 })
                                                 .apply(arguments.get(1));
                                     } else {
-                                        // bad naming. will be caught by expected build step
-                                        // TODO implement and name the build step
+                                        LOGGER.warnf("Unable to validate command request naming for '%s' because the use case is bad named to validate it. Use case naming will fail via 'validateBizMutationUseCaseNaming' build step.",
+                                                classInfo.simpleName());
                                     }
                                     return null;
                                 })
@@ -475,6 +503,22 @@ class BizFlowExtProcessor {
     }
 
     @BuildStep
+    void validateBizQueryUseCaseNaming(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                       final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(BizQueryUseCase.class)
+                .stream()
+                .map(ClassInfo::simpleName)
+                .filter(bizQueryUseCaseSimpleName -> !bizQueryUseCaseSimpleName.endsWith(BIZ_QUERY_USE_CASE_SIMPLE_NAME))
+                .forEach(badNamingBizQueryUseCaseSimpleName -> {
+                    validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                            new IllegalStateException(String.format("Bad naming for '%s', must end with '%s'",
+                                    badNamingBizQueryUseCaseSimpleName, BIZ_QUERY_USE_CASE_SIMPLE_NAME))
+                    ));
+                });
+    }
+
+    @BuildStep
     void validateBizQueryUseCaseRequestCommand(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
@@ -484,7 +528,7 @@ class BizFlowExtProcessor {
                                 .andThen(interfacePosition -> {
                                     final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
                                     assert arguments.size() == 3;
-                                    final int indexOfBizQueryUseCase = classInfo.simpleName().indexOf("BizQueryUseCase");
+                                    final int indexOfBizQueryUseCase = classInfo.simpleName().indexOf(BIZ_QUERY_USE_CASE_SIMPLE_NAME);
                                     if (indexOfBizQueryUseCase > -1) {
                                         final String expectedNaming = classInfo.simpleName().substring(0, indexOfBizQueryUseCase) + "QueryRequest";
                                         new ExtractClassNaming()
@@ -499,8 +543,8 @@ class BizFlowExtProcessor {
                                                 })
                                                 .apply(arguments.get(1));
                                     } else {
-                                        // bad naming. will be caught by expected build step
-                                        // TODO implement and name the build step
+                                        LOGGER.warnf("Unable to validate query request naming for '%s' because the use case is bad named to validate it. Use case naming will fail via 'validateBizQueryUseCaseNaming' build step.",
+                                                classInfo.simpleName());
                                     }
                                     return null;
                                 })

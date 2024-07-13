@@ -10,23 +10,23 @@ import io.bizflowframework.biz.flow.ext.runtime.usecase.BizMutationUseCase;
 
 import java.util.Objects;
 
-public final class MarkTodoAsCompletedUseCase implements BizMutationUseCase<TodoAggregateRoot, MarkTodoAsCompletedRequest, MarkTodoAsCompletedUseCaseException> {
+public final class MarkTodoAsCompletedBizMutationUseCase implements BizMutationUseCase<TodoAggregateRoot, MarkTodoAsCompletedCommandRequest, MarkTodoAsCompletedBizMutationUseCaseException> {
     private final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository;
 
-    public MarkTodoAsCompletedUseCase(final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository) {
+    public MarkTodoAsCompletedBizMutationUseCase(final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository) {
         this.aggregateAggregateRootRepository = Objects.requireNonNull(aggregateAggregateRootRepository);
     }
 
     @Override
-    public TodoAggregateRoot execute(final MarkTodoAsCompletedRequest request) throws MarkTodoAsCompletedUseCaseException {
+    public TodoAggregateRoot execute(final MarkTodoAsCompletedCommandRequest request) throws MarkTodoAsCompletedBizMutationUseCaseException {
         try {
             final TodoAggregateRoot todoAggregateRoot = aggregateAggregateRootRepository.load(request.aggregateId());
             todoAggregateRoot.handle(request);
             return aggregateAggregateRootRepository.save(todoAggregateRoot);
         } catch (final UnknownAggregateRootException unknownAggregateRootException) {
-            throw new MarkTodoAsCompletedUseCaseException(new UnknownTodoException(request.todoId()));
+            throw new MarkTodoAsCompletedBizMutationUseCaseException(new UnknownTodoException(request.todoId()));
         } catch (final TodoAlreadyMarkedAsCompletedException todoAlreadyMarkedAsCompletedException) {
-            throw new MarkTodoAsCompletedUseCaseException(new TodoAlreadyMarkedAsCompletedException(request.todoId()));
+            throw new MarkTodoAsCompletedBizMutationUseCaseException(new TodoAlreadyMarkedAsCompletedException(request.todoId()));
         }
     }
 }

@@ -1,7 +1,7 @@
 package io.bizflowframework.biz.flow.ext.it.domain;
 
-import io.bizflowframework.biz.flow.ext.it.domain.usecase.CreateNewTodoRequest;
-import io.bizflowframework.biz.flow.ext.it.domain.usecase.MarkTodoAsCompletedRequest;
+import io.bizflowframework.biz.flow.ext.it.domain.usecase.CreateNewTodoCommandRequest;
+import io.bizflowframework.biz.flow.ext.it.domain.usecase.MarkTodoAsCompletedCommandRequest;
 import io.bizflowframework.biz.flow.ext.it.domain.event.TodoCreated;
 import io.bizflowframework.biz.flow.ext.it.domain.event.TodoMarkedAsCompleted;
 import io.bizflowframework.biz.flow.ext.it.domain.event.UnknownTodoEvent;
@@ -22,11 +22,11 @@ public final class TodoAggregateRoot extends AggregateRoot<TodoId, TodoAggregate
         super(aggregateId, createdAtProvider, aggregateVersionIncrementer);
     }
 
-    public void handle(final CreateNewTodoRequest createNewTodoCommand) {
+    public void handle(final CreateNewTodoCommandRequest createNewTodoCommand) {
         this.apply(new TodoCreated(createNewTodoCommand.description()));
     }
 
-    public void handle(final MarkTodoAsCompletedRequest markTodoAsCompletedCommand)
+    public void handle(final MarkTodoAsCompletedCommandRequest markTodoAsCompletedCommand)
             throws TodoAlreadyMarkedAsCompletedException {
         if (TodoStatus.COMPLETED.equals(status)) {
             throw new TodoAlreadyMarkedAsCompletedException(markTodoAsCompletedCommand.todoId());

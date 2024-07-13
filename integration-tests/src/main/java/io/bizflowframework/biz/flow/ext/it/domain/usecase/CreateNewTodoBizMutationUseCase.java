@@ -10,16 +10,16 @@ import io.bizflowframework.biz.flow.ext.runtime.usecase.BizMutationUseCase;
 
 import java.util.Objects;
 
-public final class CreateNewTodoUseCase implements BizMutationUseCase<TodoAggregateRoot, CreateNewTodoRequest, CreateNewTodoUseCaseException> {
+public final class CreateNewTodoBizMutationUseCase implements BizMutationUseCase<TodoAggregateRoot, CreateNewTodoCommandRequest, CreateNewTodoBizMutationUseCaseException> {
     private final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository;
     private final TodoIdGenerator todoIdGenerator;
     private final CreatedAtProvider createdAtProvider;
     private final AggregateVersionIncrementer aggregateVersionIncrementer;
 
-    public CreateNewTodoUseCase(final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository,
-                                final TodoIdGenerator todoIdGenerator,
-                                final CreatedAtProvider createdAtProvider,
-                                final AggregateVersionIncrementer aggregateVersionIncrementer) {
+    public CreateNewTodoBizMutationUseCase(final AggregateRootRepository<TodoId, TodoAggregateRoot> aggregateAggregateRootRepository,
+                                           final TodoIdGenerator todoIdGenerator,
+                                           final CreatedAtProvider createdAtProvider,
+                                           final AggregateVersionIncrementer aggregateVersionIncrementer) {
         this.aggregateAggregateRootRepository = Objects.requireNonNull(aggregateAggregateRootRepository);
         this.todoIdGenerator = Objects.requireNonNull(todoIdGenerator);
         this.createdAtProvider = Objects.requireNonNull(createdAtProvider);
@@ -27,7 +27,7 @@ public final class CreateNewTodoUseCase implements BizMutationUseCase<TodoAggreg
     }
 
     @Override
-    public TodoAggregateRoot execute(final CreateNewTodoRequest command) throws CreateNewTodoUseCaseException {
+    public TodoAggregateRoot execute(final CreateNewTodoCommandRequest command) throws CreateNewTodoBizMutationUseCaseException {
         final TodoId todoIdGenerated = todoIdGenerator.generate();
         final TodoAggregateRoot newTodo = new TodoAggregateRoot(todoIdGenerated, createdAtProvider, aggregateVersionIncrementer);
         newTodo.handle(command);

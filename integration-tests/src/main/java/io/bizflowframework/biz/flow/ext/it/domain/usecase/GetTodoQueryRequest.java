@@ -5,8 +5,8 @@ import io.bizflowframework.biz.flow.ext.runtime.usecase.QueryRequest;
 
 import java.util.Objects;
 
-public record GetTodoRequest(TodoId todoId) implements QueryRequest {
-    public GetTodoRequest {
+public record GetTodoQueryRequest(TodoId todoId) implements QueryRequest {
+    public GetTodoQueryRequest {
         Objects.requireNonNull(todoId);
     }
 }

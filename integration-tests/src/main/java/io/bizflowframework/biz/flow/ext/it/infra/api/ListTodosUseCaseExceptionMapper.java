@@ -1,6 +1,6 @@
 package io.bizflowframework.biz.flow.ext.it.infra.api;
 
-import io.bizflowframework.biz.flow.ext.it.domain.usecase.ListTodosUseCaseException;
+import io.bizflowframework.biz.flow.ext.it.domain.usecase.ListTodosBizQueryUseCaseException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
@@ -11,7 +11,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 
 @Provider
-public class ListTodosUseCaseExceptionMapper implements ExceptionMapper<ListTodosUseCaseException> {
+public class ListTodosUseCaseExceptionMapper implements ExceptionMapper<ListTodosBizQueryUseCaseException> {
     private static final String UNKNOWN_MSG = "Something wrong happened";
     private static final String VND_LIST_TODOS_ERROR_V1_TXT = "application/vnd.list-todos-error-v1+txt";
 
@@ -34,7 +34,7 @@ public class ListTodosUseCaseExceptionMapper implements ExceptionMapper<ListTodo
                     )
             }
     )
-    public Response toResponse(final ListTodosUseCaseException exception) {
+    public Response toResponse(final ListTodosBizQueryUseCaseException exception) {
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .type(VND_LIST_TODOS_ERROR_V1_TXT)
                 .entity(UNKNOWN_MSG)

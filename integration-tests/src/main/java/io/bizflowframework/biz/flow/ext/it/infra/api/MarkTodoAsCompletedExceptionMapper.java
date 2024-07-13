@@ -2,7 +2,7 @@ package io.bizflowframework.biz.flow.ext.it.infra.api;
 
 import io.bizflowframework.biz.flow.ext.it.domain.TodoAlreadyMarkedAsCompletedException;
 import io.bizflowframework.biz.flow.ext.it.domain.UnknownTodoException;
-import io.bizflowframework.biz.flow.ext.it.domain.usecase.MarkTodoAsCompletedUseCaseException;
+import io.bizflowframework.biz.flow.ext.it.domain.usecase.MarkTodoAsCompletedBizMutationUseCaseException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
@@ -13,7 +13,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 
 @Provider
-public final class MarkTodoAsCompletedExceptionMapper implements ExceptionMapper<MarkTodoAsCompletedUseCaseException> {
+public final class MarkTodoAsCompletedExceptionMapper implements ExceptionMapper<MarkTodoAsCompletedBizMutationUseCaseException> {
     private static final String VND_UNKNOWN_TODO_V1_TXT = "application/vnd.unknown-todo-v1+txt";
     private static final String VND_TODO_ALREADY_MARKED_AS_COMPLETED_V1_TXT = "application/vnd.todo-already-marked-as-completed-v1+txt";
     private static final String VND_MARK_TODO_AS_COMPLETED_ERROR_V1_TXT = "application/vnd.mark-todo-as-completed-error-v1+txt";
@@ -69,7 +69,7 @@ public final class MarkTodoAsCompletedExceptionMapper implements ExceptionMapper
                     )
             }
     )
-    public Response toResponse(final MarkTodoAsCompletedUseCaseException exception) {
+    public Response toResponse(final MarkTodoAsCompletedBizMutationUseCaseException exception) {
         return switch (exception.getCause()) {
             case UnknownTodoException unknownTodoException -> Response.status(Response.Status.NOT_FOUND)
                     .type(VND_UNKNOWN_TODO_V1_TXT)

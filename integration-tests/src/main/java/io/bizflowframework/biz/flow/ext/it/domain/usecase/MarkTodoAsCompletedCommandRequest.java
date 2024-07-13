@@ -5,8 +5,8 @@ import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.command.AggregateC
 
 import java.util.Objects;
 
-public record MarkTodoAsCompletedRequest(TodoId todoId) implements AggregateCommandRequest<TodoId> {
-    public MarkTodoAsCompletedRequest {
+public record MarkTodoAsCompletedCommandRequest(TodoId todoId) implements AggregateCommandRequest<TodoId> {
+    public MarkTodoAsCompletedCommandRequest {
         Objects.requireNonNull(todoId);
     }
 
