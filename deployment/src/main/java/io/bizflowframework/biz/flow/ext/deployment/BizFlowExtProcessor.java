@@ -36,13 +36,15 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Singleton;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.MethodInfo;
-import org.jboss.jandex.ParameterizedType;
 import org.jboss.logging.Logger;
 import org.objectweb.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class BizFlowExtProcessor {
@@ -76,6 +78,30 @@ class BizFlowExtProcessor {
     }
 
     @BuildStep
+    void validateOnlyOneSerdeImplementationPerAggregateRootAndAggregateRootEventPayload(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                                                                        final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Map<AggregateRootEventPayloadSerdeKey, List<ClassInfo>> collect = applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(AggregateRootEventPayloadSerde.class)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        classInfo -> new GetInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayloadSerde.class)
+                                .andThen(new AggregateRootEventPayloadSerdeKeyExtractor())
+                                .apply(classInfo)));
+        collect
+                .forEach((key, classInfos) -> {
+                    if (classInfos.size() > 1) {
+                        final String implementations = classInfos.stream().map(classInfo -> classInfo.name().toString())
+                                .sorted()
+                                .collect(Collectors.joining(", "));
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("Multiple implementations found for Serde '%s', only one is expected. Found implementations %s",
+                                        key, implementations))
+                        ));
+                    }
+                });
+    }
+
+    @BuildStep
     void enhanceBaseAggregateRootRepository(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                             final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
@@ -94,7 +120,6 @@ class BizFlowExtProcessor {
     @BuildStep
     void generateBaseAggregateRootRepository(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                              final BuildProducer<GeneratedBeanBuildItem> generatedBeanBuildItemBuildProducer) {
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
                 .getAllKnownSubclasses(AggregateRoot.class)
                 .forEach(classInfo ->
@@ -393,9 +418,9 @@ class BizFlowExtProcessor {
         Stream.concat(allBizMutationUseCaseImplementors.stream(),
                         allBizQueryUseCaseImplementors.stream())
                 .forEach(classInfo ->
-                        new FindInterfaceFromClassInfo(BizMutationUseCase.class, BizQueryUseCase.class)
-                                .andThen(interfacePosition -> {
-                                    final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
+                        new GetInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class, BizQueryUseCase.class)
+                                .andThen(parameterizedType -> {
+                                    final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
                                     assert arguments.size() == 3;
                                     final MethodInfo execute = classInfo.method("execute", arguments.get(1));
                                     final String expectedExceptionNaming = classInfo.simpleName() + "Exception";
@@ -450,9 +475,9 @@ class BizFlowExtProcessor {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizMutationUseCase.class)
                 .forEach(classInfo ->
-                        new FindInterfaceFromClassInfo(BizMutationUseCase.class)
-                                .andThen(interfacePosition -> {
-                                    final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
+                        new GetInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class)
+                                .andThen(parameterizedType -> {
+                                    final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
                                     assert arguments.size() == 3;
                                     final int indexOfBizMutationUseCase = classInfo.simpleName().indexOf(BIZ_MUTATION_USE_CASE_SIMPLE_NAME);
                                     if (indexOfBizMutationUseCase > -1) {
@@ -485,10 +510,10 @@ class BizFlowExtProcessor {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizQueryUseCase.class)
                 .forEach(classInfo ->
-                        new FindInterfaceFromClassInfo(BizQueryUseCase.class)
-                                .andThen(interfacePosition -> {
+                        new GetInterfaceParameterizedTypeFromClassInfo(BizQueryUseCase.class)
+                                .andThen(parameterizedType -> {
                                     try {
-                                        final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
+                                        final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
                                         assert arguments.size() == 3;
                                         final org.jboss.jandex.Type projectionType = arguments.getFirst();
                                         final Class<?> projectionClass = classLoader.loadClass(projectionType.name().toString());
@@ -530,9 +555,9 @@ class BizFlowExtProcessor {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizQueryUseCase.class)
                 .forEach(classInfo ->
-                        new FindInterfaceFromClassInfo(BizQueryUseCase.class)
-                                .andThen(interfacePosition -> {
-                                    final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
+                        new GetInterfaceParameterizedTypeFromClassInfo(BizQueryUseCase.class)
+                                .andThen(parameterizedType -> {
+                                    final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
                                     assert arguments.size() == 3;
                                     final int indexOfBizQueryUseCase = classInfo.simpleName().indexOf(BIZ_QUERY_USE_CASE_SIMPLE_NAME);
                                     if (indexOfBizQueryUseCase > -1) {
