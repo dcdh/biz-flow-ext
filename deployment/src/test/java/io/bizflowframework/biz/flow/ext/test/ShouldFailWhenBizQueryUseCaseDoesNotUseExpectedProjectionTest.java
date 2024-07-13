@@ -2,7 +2,8 @@ package io.bizflowframework.biz.flow.ext.test;
 
 import io.bizflowframework.biz.flow.ext.runtime.usecase.BizQueryUseCase;
 import io.bizflowframework.biz.flow.ext.runtime.usecase.Projection;
-import io.bizflowframework.biz.flow.ext.runtime.usecase.QueryRequest;
+import io.bizflowframework.biz.flow.ext.test.usecase.ListTodoBizQueryUseCaseException;
+import io.bizflowframework.biz.flow.ext.test.usecase.ListTodoQueryRequest;
 import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,9 @@ public class ShouldFailWhenBizQueryUseCaseDoesNotUseExpectedProjectionTest {
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
             .withApplicationRoot(jar -> jar
-                    .addClasses(ListTodoBizQueryUseCase.class, Todo.class, ListTodoQueryRequest.class,
+                    .addClasses(ListTodoBizQueryUseCase.class,
+                            BadQueryTodoProjection.class,
+                            ListTodoQueryRequest.class,
                             ListTodoBizQueryUseCaseException.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql"))
@@ -30,20 +33,15 @@ public class ShouldFailWhenBizQueryUseCaseDoesNotUseExpectedProjectionTest {
         Assertions.fail("Startup should have failed");
     }
 
-    private static final class ListTodoBizQueryUseCase implements BizQueryUseCase<Todo, ListTodoQueryRequest, ListTodoBizQueryUseCaseException> {
+    private static final class ListTodoBizQueryUseCase implements BizQueryUseCase<BadQueryTodoProjection, ListTodoQueryRequest, ListTodoBizQueryUseCaseException> {
 
         @Override
-        public Todo execute(final ListTodoQueryRequest request) throws ListTodoBizQueryUseCaseException {
+        public BadQueryTodoProjection execute(final ListTodoQueryRequest request) throws ListTodoBizQueryUseCaseException {
             return null;
         }
     }
 
-    private static final class Todo implements Projection {
+    private static final class BadQueryTodoProjection implements Projection {
     }
 
-    private record ListTodoQueryRequest() implements QueryRequest {
-    }
-
-    private static final class ListTodoBizQueryUseCaseException extends Exception {
-    }
 }

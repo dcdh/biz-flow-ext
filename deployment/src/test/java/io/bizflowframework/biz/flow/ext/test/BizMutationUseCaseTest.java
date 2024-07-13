@@ -1,7 +1,8 @@
 package io.bizflowframework.biz.flow.ext.test;
 
-import io.bizflowframework.biz.flow.ext.runtime.usecase.BizMutationUseCase;
-import io.bizflowframework.biz.flow.ext.runtime.usecase.CommandRequest;
+import io.bizflowframework.biz.flow.ext.test.usecase.CreateTodoBizMutationUseCase;
+import io.bizflowframework.biz.flow.ext.test.usecase.CreateTodoBizMutationUseCaseException;
+import io.bizflowframework.biz.flow.ext.test.usecase.CreateTodoCommandRequest;
 import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -14,8 +15,13 @@ public class BizMutationUseCaseTest {
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
             .withApplicationRoot(jar -> jar
-                    .addClasses(CreateTodoBizMutationUseCase.class, Todo.class, CreateTodoCommandRequest.class,
-                            CreateTodoBizMutationUseCaseException.class)
+                    .addClasses(CreateTodoBizMutationUseCase.class,
+                            TodoId.class,
+                            TodoAggregateRoot.class,
+                            CreateTodoCommandRequest.class,
+                            CreateTodoBizMutationUseCaseException.class,
+                            StubbedDefaultCreatedAtProvider.class,
+                            StubbedDefaultAggregateVersionIncrementer.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql"));
 
@@ -27,20 +33,4 @@ public class BizMutationUseCaseTest {
         assertThat(createTodoBizMutationUseCase.execute(new CreateTodoCommandRequest())).isNotNull();
     }
 
-    private static final class CreateTodoBizMutationUseCase implements BizMutationUseCase<Todo, CreateTodoCommandRequest, CreateTodoBizMutationUseCaseException> {
-
-        @Override
-        public Todo execute(final CreateTodoCommandRequest request) throws CreateTodoBizMutationUseCaseException {
-            return new Todo();
-        }
-    }
-
-    private static final class Todo {
-    }
-
-    private record CreateTodoCommandRequest() implements CommandRequest {
-    }
-
-    private static final class CreateTodoBizMutationUseCaseException extends Exception {
-    }
 }

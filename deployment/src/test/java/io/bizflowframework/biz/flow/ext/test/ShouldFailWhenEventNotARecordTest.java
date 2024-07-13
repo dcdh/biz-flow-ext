@@ -40,7 +40,7 @@ public class ShouldFailWhenEventNotARecordTest {
         }
     }
 
-    private final class InvalidTodoEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, InvalidTodoEvent> {
+    private static final class InvalidTodoEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, InvalidTodoEvent> {
 
         @Override
         public SerializedEventPayload serialize(final InvalidTodoEvent selfAggregateRootEventPayload) {

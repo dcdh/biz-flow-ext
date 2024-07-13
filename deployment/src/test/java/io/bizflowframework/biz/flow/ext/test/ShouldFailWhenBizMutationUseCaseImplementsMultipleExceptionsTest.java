@@ -1,7 +1,8 @@
 package io.bizflowframework.biz.flow.ext.test;
 
 import io.bizflowframework.biz.flow.ext.runtime.usecase.BizMutationUseCase;
-import io.bizflowframework.biz.flow.ext.runtime.usecase.CommandRequest;
+import io.bizflowframework.biz.flow.ext.test.usecase.CreateTodoBizMutationUseCaseException;
+import io.bizflowframework.biz.flow.ext.test.usecase.CreateTodoCommandRequest;
 import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,10 @@ public class ShouldFailWhenBizMutationUseCaseImplementsMultipleExceptionsTest {
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
             .withApplicationRoot(jar -> jar
-                    .addClasses(CreateTodoBizMutationUseCase.class, Todo.class, CreateTodoCommandRequest.class,
+                    .addClasses(CreateTodoBizMutationUseCase.class,
+                            TodoId.class,
+                            TodoAggregateRoot.class,
+                            CreateTodoCommandRequest.class,
                             CreateTodoBizMutationUseCaseException.class,
                             AnotherUnwantedException.class)
                     .addAsResource("application.properties")
@@ -30,21 +34,12 @@ public class ShouldFailWhenBizMutationUseCaseImplementsMultipleExceptionsTest {
         Assertions.fail("Startup should have failed");
     }
 
-    private static final class CreateTodoBizMutationUseCase implements BizMutationUseCase<Todo, CreateTodoCommandRequest, CreateTodoBizMutationUseCaseException> {
+    private static final class CreateTodoBizMutationUseCase implements BizMutationUseCase<TodoAggregateRoot, CreateTodoCommandRequest, CreateTodoBizMutationUseCaseException> {
 
         @Override
-        public Todo execute(CreateTodoCommandRequest request) throws CreateTodoBizMutationUseCaseException, AnotherUnwantedException {
-            return null;
+        public TodoAggregateRoot execute(final CreateTodoCommandRequest request) throws CreateTodoBizMutationUseCaseException, AnotherUnwantedException {
+            throw new IllegalStateException("Should not be called");
         }
-    }
-
-    private static final class Todo {
-    }
-
-    private record CreateTodoCommandRequest() implements CommandRequest {
-    }
-
-    private static final class CreateTodoBizMutationUseCaseException extends Exception {
     }
 
     private static final class AnotherUnwantedException extends RuntimeException {

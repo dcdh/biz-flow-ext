@@ -1,5 +1,6 @@
 package io.bizflowframework.biz.flow.ext.deployment;
 
+import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ParameterizedType;
 
