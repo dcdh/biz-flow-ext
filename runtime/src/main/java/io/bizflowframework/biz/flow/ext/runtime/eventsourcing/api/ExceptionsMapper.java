@@ -3,7 +3,6 @@ package io.bizflowframework.biz.flow.ext.runtime.eventsourcing.api;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.EventStoreException;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.UnknownAggregateRootAtVersionException;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.UnknownAggregateRootException;
-import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.MissingSerdeException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
@@ -27,16 +26,6 @@ public final class ExceptionsMapper {
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .type(VND_EVENT_STORE_ERROR_V1_TXT)
                 .entity(exception.getMessage())
-                .build();
-    }
-
-    @ServerExceptionMapper
-    public Response mapException(final MissingSerdeException exception) {
-        return Response.status(Response.Status.NOT_IMPLEMENTED)
-                .type(VND_AGGREGATE_ROOT_ERROR_V1_TXT)
-                .entity(String.format("Missing Serde for aggregate root type '%s' and event type '%s'",
-                        exception.getAggregateType().type(),
-                        exception.getEventType().type()))
                 .build();
     }
 

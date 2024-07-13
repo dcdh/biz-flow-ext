@@ -6,7 +6,6 @@ import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.creational.Aggrega
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.AggregateRootEventPayload;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.EventRepository;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.EventType;
-import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.MissingSerdeException;
 import jakarta.enterprise.inject.Instance;
 import jakarta.transaction.Transactional;
 
@@ -29,7 +28,7 @@ public abstract class BaseAggregateRootRepository<ID extends AggregateId, T exte
 
     @Override
     @Transactional
-    public T save(final T aggregateRoot) throws MissingSerdeException, EventStoreException {
+    public T save(final T aggregateRoot) throws EventStoreException {
         Objects.requireNonNull(aggregateRoot);
         while (aggregateRoot.hasDomainEvent()) {
             final AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> domainEventToSave = aggregateRoot.consumeDomainEvent();
@@ -54,7 +53,7 @@ public abstract class BaseAggregateRootRepository<ID extends AggregateId, T exte
 
     @Override
     @Transactional
-    public T load(final ID aggregateId) throws UnknownAggregateRootException, MissingSerdeException, EventStoreException {
+    public T load(final ID aggregateId) throws UnknownAggregateRootException, EventStoreException {
         Objects.requireNonNull(aggregateId);
         final T instance = aggregateRootInstanceCreator.createNewInstance(clazz(), aggregateId);
         final List<AggregateRootDomainEvent> aggregateRootEvents = eventRepository.loadOrderByVersionASC(instance.aggregateRootIdentifier());
@@ -68,7 +67,7 @@ public abstract class BaseAggregateRootRepository<ID extends AggregateId, T exte
     @Override
     @Transactional
     public T load(final ID aggregateId, final AggregateVersion aggregateVersion)
-            throws UnknownAggregateRootException, UnknownAggregateRootAtVersionException, MissingSerdeException, EventStoreException {
+            throws UnknownAggregateRootException, UnknownAggregateRootAtVersionException, EventStoreException {
         Objects.requireNonNull(aggregateId);
         Objects.requireNonNull(aggregateVersion);
         final T instance = aggregateRootInstanceCreator.createNewInstance(clazz(), aggregateId);

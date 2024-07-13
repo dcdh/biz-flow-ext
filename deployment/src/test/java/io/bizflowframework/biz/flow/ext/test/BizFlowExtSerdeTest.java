@@ -2,8 +2,6 @@ package io.bizflowframework.biz.flow.ext.test;
 
 import io.bizflowframework.biz.flow.ext.test.event.TodoCreated;
 import io.bizflowframework.biz.flow.ext.test.event.TodoCreatedAggregateRootEventPayloadSerde;
-import io.bizflowframework.biz.flow.ext.test.event.TodoMarkedAsCompleted;
-import io.bizflowframework.biz.flow.ext.test.event.UnknownTodoEvent;
 import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -18,13 +16,11 @@ public class BizFlowExtSerdeTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                            .addClass(TodoAggregateRoot.class)
-                            .addClass(TodoId.class)
-                            .addClass(TodoStatus.class)
-                            .addClass(TodoCreated.class)
-                            .addClass(TodoMarkedAsCompleted.class)
-                            .addClass(TodoCreatedAggregateRootEventPayloadSerde.class)
-                            .addClass(UnknownTodoEvent.class)
+                    .addClass(TodoAggregateRoot.class)
+                    .addClass(TodoId.class)
+                    .addClass(TodoStatus.class)
+                    .addClass(TodoCreated.class)
+                    .addClass(TodoCreatedAggregateRootEventPayloadSerde.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql"));
 

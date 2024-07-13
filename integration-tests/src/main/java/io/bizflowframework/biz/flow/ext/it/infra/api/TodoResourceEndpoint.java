@@ -254,15 +254,6 @@ public class TodoResourceEndpoint {
     }
 
     @POST
-    @Path("/failMissingSerde")
-    public void failMissingSerde() {
-        final TodoAggregateRoot givenTodoAggregateRoot = new TodoAggregateRoot(
-                new TodoId("nice_todo"), createdAtProvider, aggregateVersionIncrementer);
-        givenTodoAggregateRoot.addUnknownTodoEvent();
-        aggregateAggregateRootRepository.save(givenTodoAggregateRoot);
-    }
-
-    @POST
     @Path("/failUnknownAggregate")
     public void failUnknownAggregate() {
         aggregateAggregateRootRepository.load(new TodoId("unknown"));

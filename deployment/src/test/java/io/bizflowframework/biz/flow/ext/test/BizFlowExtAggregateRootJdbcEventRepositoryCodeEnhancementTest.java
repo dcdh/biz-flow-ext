@@ -30,7 +30,6 @@ public class BizFlowExtAggregateRootJdbcEventRepositoryCodeEnhancementTest {
                     .addClass(TodoMarkedAsCompleted.class)
                     .addClass(TodoCreatedAggregateRootEventPayloadSerde.class)
                     .addClass(TodoMarkedAsCompletedAggregateRootEventPayloadSerde.class)
-                    .addClass(UnknownTodoEvent.class)
                     .addClass(TodoAggregateBaseJdbcPostgresqlEventRepositoryEnhanced.class)
                     .addClass(TodoAggregateRootRepositoryEnhanced.class)
                     .addClass(StubbedDefaultCreatedAtProvider.class)

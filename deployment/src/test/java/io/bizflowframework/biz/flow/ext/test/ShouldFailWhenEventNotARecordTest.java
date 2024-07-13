@@ -1,7 +1,12 @@
 package io.bizflowframework.biz.flow.ext.test;
 
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.AggregateRootEventPayload;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.AggregateRootEventPayloadSerde;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.SerializedEventPayload;
+import io.bizflowframework.biz.flow.ext.test.event.TodoCreated;
 import io.quarkus.test.QuarkusUnitTest;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -12,7 +17,7 @@ public class ShouldFailWhenEventNotARecordTest {
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
             .withApplicationRoot(jar -> jar
-                    .addClasses(TodoId.class, TodoAggregateRoot.class, InvalidTodoEvent.class)
+                    .addClasses(TodoId.class, TodoAggregateRoot.class, InvalidTodoEvent.class, InvalidTodoEventPayloadSerde.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql")
             )
@@ -34,4 +39,18 @@ public class ShouldFailWhenEventNotARecordTest {
 
         }
     }
+
+    private final class InvalidTodoEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, InvalidTodoEvent> {
+
+        @Override
+        public SerializedEventPayload serialize(final InvalidTodoEvent selfAggregateRootEventPayload) {
+            throw new IllegalStateException("Should not be called");
+        }
+
+        @Override
+        public InvalidTodoEvent deserialize(final SerializedEventPayload serializedEventPayload) {
+            throw new IllegalStateException("Should not be called");
+        }
+    }
+
 }

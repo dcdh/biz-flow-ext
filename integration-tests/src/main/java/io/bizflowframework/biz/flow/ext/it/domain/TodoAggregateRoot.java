@@ -4,7 +4,6 @@ import io.bizflowframework.biz.flow.ext.it.domain.usecase.CreateNewTodoCommandRe
 import io.bizflowframework.biz.flow.ext.it.domain.usecase.MarkTodoAsCompletedCommandRequest;
 import io.bizflowframework.biz.flow.ext.it.domain.event.TodoCreated;
 import io.bizflowframework.biz.flow.ext.it.domain.event.TodoMarkedAsCompleted;
-import io.bizflowframework.biz.flow.ext.it.domain.event.UnknownTodoEvent;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRoot;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.CreatedAtProvider;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.incrementer.AggregateVersionIncrementer;
@@ -32,10 +31,6 @@ public final class TodoAggregateRoot extends AggregateRoot<TodoId, TodoAggregate
             throw new TodoAlreadyMarkedAsCompletedException(markTodoAsCompletedCommand.todoId());
         }
         this.apply(new TodoMarkedAsCompleted());
-    }
-
-    public void addUnknownTodoEvent() {
-        this.apply(new UnknownTodoEvent());
     }
 
     public void on(final TodoCreated todoCreated) {

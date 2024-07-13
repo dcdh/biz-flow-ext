@@ -18,17 +18,6 @@ public class BizFlowExtResourceTest {
 
     // DefaultErrors
     @Test
-    public void shouldReturnExpectedResponseWhenSerdeIsMissing() {
-        given()
-                .when().post("/todo/failMissingSerde")
-                .then()
-                .log().all()
-                .statusCode(501)
-                .contentType("application/vnd.aggregate-root-error-v1+txt")
-                .body(is("Missing Serde for aggregate root type 'TodoAggregateRoot' and event type 'UnknownTodoEvent'"));
-    }
-
-    @Test
     public void shouldReturnExpectedResponseWhenAggregateRootIsUnknown() {
         given()
                 .when().post("/todo/failUnknownAggregate")

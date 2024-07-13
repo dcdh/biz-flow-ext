@@ -5,7 +5,6 @@ import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.CreatedAtProvider;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.incrementer.AggregateVersionIncrementer;
 import io.bizflowframework.biz.flow.ext.test.event.TodoCreated;
 import io.bizflowframework.biz.flow.ext.test.event.TodoMarkedAsCompleted;
-import io.bizflowframework.biz.flow.ext.test.event.UnknownTodoEvent;
 
 import java.util.Objects;
 
@@ -26,10 +25,6 @@ public final class TodoAggregateRoot extends AggregateRoot<TodoId, TodoAggregate
 
     public void markTodoAsCompleted() {
         this.apply(new TodoMarkedAsCompleted());
-    }
-
-    public void addUnknownTodoEvent() {
-        this.apply(new UnknownTodoEvent());
     }
 
     public void on(final TodoCreated todoCreated) {
@@ -66,9 +61,9 @@ public final class TodoAggregateRoot extends AggregateRoot<TodoId, TodoAggregate
     @Override
     public String toString() {
         return "TodoAggregateRoot{" +
-               "description='" + description + '\'' +
-               ", status=" + status +
-               ", aggregateRootIdentifier=" + aggregateRootIdentifier +
-               '}';
+                "description='" + description + '\'' +
+                ", status=" + status +
+                ", aggregateRootIdentifier=" + aggregateRootIdentifier +
+                '}';
     }
 }

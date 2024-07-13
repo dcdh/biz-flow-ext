@@ -5,17 +5,17 @@ import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.AggregateRoo
 
 import java.util.Objects;
 
-public record AggregateRootEventPayloadSerdeKey(String aggregateRootClassName, String eventPayloadClassName) {
-
-    public AggregateRootEventPayloadSerdeKey {
+public record AggregateRootEventPayloadKey(String aggregateRootClassName, String eventPayloadClassName) {
+    public AggregateRootEventPayloadKey {
         Objects.requireNonNull(aggregateRootClassName);
         Objects.requireNonNull(eventPayloadClassName);
     }
 
-    public AggregateRootEventPayloadSerdeKey(final Class<?> aggregateRootClass, final Class<?> eventPayloadClass) {
+    public AggregateRootEventPayloadKey(final Class<?> aggregateRootClass, final Class<?> eventPayloadClass) {
         this(Objects.requireNonNull(aggregateRootClass).getName(),
                 Objects.requireNonNull(eventPayloadClass).getName());
         assert AggregateRoot.class.isAssignableFrom(aggregateRootClass);
         assert AggregateRootEventPayload.class.isAssignableFrom(eventPayloadClass);
     }
+
 }

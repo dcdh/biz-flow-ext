@@ -29,7 +29,6 @@ public class BizFlowExtBaseOnSavedEventTest {
                     .addClass(TodoMarkedAsCompleted.class)
                     .addClass(TodoCreatedAggregateRootEventPayloadSerde.class)
                     .addClass(TodoMarkedAsCompletedAggregateRootEventPayloadSerde.class)
-                    .addClass(UnknownTodoEvent.class)
                     .addClass(TodoAggregateBaseJdbcPostgresqlEventRepository.class)
                     .addClass(TodoAggregateRootRepository.class)
                     .addClass(StubbedDefaultCreatedAtProvider.class)
