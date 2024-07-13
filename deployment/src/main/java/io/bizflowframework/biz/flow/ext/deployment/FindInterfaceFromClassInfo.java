@@ -8,16 +8,14 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-public final class FindInterfaceFromClassInfo implements Function<ClassInfo, Integer> {
-
-    private final List<Class<?>> interfacesToFind;
+public record FindInterfaceFromClassInfo(List<Class<?>> interfacesToFind) implements Function<ClassInfo, Integer> {
 
     public FindInterfaceFromClassInfo(final Class<?>... interfacesToFind) {
-        this.interfacesToFind = Arrays.asList(interfacesToFind);
+        this(Arrays.asList(interfacesToFind));
     }
 
     public FindInterfaceFromClassInfo(final Class<?> interfaceToFind) {
-        this.interfacesToFind = List.of(interfaceToFind);
+        this(List.of(interfaceToFind));
     }
 
     @Override

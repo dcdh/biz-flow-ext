@@ -4,7 +4,7 @@ import org.jboss.jandex.Type;
 
 import java.util.function.Function;
 
-public final class ExtractClassNaming implements Function<Type, String> {
+public record ExtractClassNaming() implements Function<Type, String> {
 
     @Override
     public String apply(final Type type) {

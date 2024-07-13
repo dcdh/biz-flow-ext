@@ -97,54 +97,53 @@ class BizFlowExtProcessor {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
                 .getAllKnownSubclasses(AggregateRoot.class)
-                .forEach(classInfo -> {
-                    try {
-                        final Class<?> aggregateRootClass = classLoader.loadClass(classInfo.name().toString());
-                        assert AggregateRoot.class.isAssignableFrom(aggregateRootClass);
-                        final Class<?> aggregateIdClass = classLoader.loadClass(classInfo.superClassType().asParameterizedType().arguments().getFirst().toString());
-                        assert AggregateId.class.isAssignableFrom(aggregateIdClass);
-                        try (final ClassCreator beanClassCreator = ClassCreator.builder()
-                                .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer))
-                                .className(classInfo.name() + "RepositoryGenerated")
-                                .signature(SignatureBuilder.forClass()
-                                        .setSuperClass(
-                                                Type.parameterizedType(
-                                                        Type.classType(BaseAggregateRootRepository.class),
-                                                        Type.classType(aggregateIdClass),
-                                                        Type.classType(aggregateRootClass))))
-                                .setFinal(false)
-                                .build()) {
-                            beanClassCreator.addAnnotation(Singleton.class);
-                            beanClassCreator.addAnnotation(DefaultBean.class);
+                .forEach(classInfo ->
+                        new AggregateRootTypesExtractor()
+                                .andThen(aggregateRootTypes -> {
+                                    final Class<?> aggregateRootClass = aggregateRootTypes.aggregateRootClass();
+                                    final Class<?> aggregateIdClass = aggregateRootTypes.aggregateIdClass();
+                                    try (final ClassCreator beanClassCreator = ClassCreator.builder()
+                                            .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer))
+                                            .className(classInfo.name() + "RepositoryGenerated")
+                                            .signature(SignatureBuilder.forClass()
+                                                    .setSuperClass(
+                                                            Type.parameterizedType(
+                                                                    Type.classType(BaseAggregateRootRepository.class),
+                                                                    Type.classType(aggregateIdClass),
+                                                                    Type.classType(aggregateRootClass))))
+                                            .setFinal(false)
+                                            .build()) {
+                                        beanClassCreator.addAnnotation(Singleton.class);
+                                        beanClassCreator.addAnnotation(DefaultBean.class);
 
-                            // constructor
-                            final MethodCreator constructor = beanClassCreator.getMethodCreator(MethodDescriptor.INIT, void.class,
-                                    EventRepository.class, AggregateRootInstanceCreator.class, Instance.class);
-                            constructor.setSignature(
-                                    SignatureBuilder.forMethod()
-                                            .addParameterType(Type.parameterizedType(Type.classType(EventRepository.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass)))
-                                            .addParameterType(Type.classType(AggregateRootInstanceCreator.class))
-                                            .addParameterType(Type.parameterizedType(Type.classType(Instance.class),
-                                                    Type.parameterizedType(Type.classType(BaseOnSavedEvent.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass),
-                                                            Type.wildcardTypeWithUpperBound(Type.parameterizedType(Type.classType(AggregateRootEventPayload.class), Type.classType(aggregateRootClass))))))
-                                            .setReturnType(Type.voidType())
-                                            .build());
-                            constructor.setModifiers(Modifier.PUBLIC);
-                            constructor.invokeSpecialMethod(MethodDescriptor.ofConstructor(BaseAggregateRootRepository.class,
-                                            EventRepository.class, AggregateRootInstanceCreator.class, Instance.class),
-                                    constructor.getThis(), constructor.getMethodParam(0), constructor.getMethodParam(1), constructor.getMethodParam(2));
-                            constructor.returnVoid();
+                                        // constructor
+                                        final MethodCreator constructor = beanClassCreator.getMethodCreator(MethodDescriptor.INIT, void.class,
+                                                EventRepository.class, AggregateRootInstanceCreator.class, Instance.class);
+                                        constructor.setSignature(
+                                                SignatureBuilder.forMethod()
+                                                        .addParameterType(Type.parameterizedType(Type.classType(EventRepository.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass)))
+                                                        .addParameterType(Type.classType(AggregateRootInstanceCreator.class))
+                                                        .addParameterType(Type.parameterizedType(Type.classType(Instance.class),
+                                                                Type.parameterizedType(Type.classType(BaseOnSavedEvent.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass),
+                                                                        Type.wildcardTypeWithUpperBound(Type.parameterizedType(Type.classType(AggregateRootEventPayload.class), Type.classType(aggregateRootClass))))))
+                                                        .setReturnType(Type.voidType())
+                                                        .build());
+                                        constructor.setModifiers(Modifier.PUBLIC);
+                                        constructor.invokeSpecialMethod(MethodDescriptor.ofConstructor(BaseAggregateRootRepository.class,
+                                                        EventRepository.class, AggregateRootInstanceCreator.class, Instance.class),
+                                                constructor.getThis(), constructor.getMethodParam(0), constructor.getMethodParam(1), constructor.getMethodParam(2));
+                                        constructor.returnVoid();
 
-                            // clazz
-                            final MethodCreator clazzMethod = beanClassCreator.getMethodCreator(
-                                    BaseAggregateRootRepositoryClassVisitor.AGGREGATE_ROOT_CLASS_METHOD_NAMING, Class.class);
-                            clazzMethod.setModifiers(Opcodes.ACC_PROTECTED);
-                            clazzMethod.returnValue(clazzMethod.loadClass(aggregateRootClass));
-                        }
-                    } catch (final ClassNotFoundException classNotFoundException) {
-                        throw new IllegalStateException("Should not be here");
-                    }
-                });
+                                        // clazz
+                                        final MethodCreator clazzMethod = beanClassCreator.getMethodCreator(
+                                                BaseAggregateRootRepositoryClassVisitor.AGGREGATE_ROOT_CLASS_METHOD_NAMING, Class.class);
+                                        clazzMethod.setModifiers(Opcodes.ACC_PROTECTED);
+                                        clazzMethod.returnValue(clazzMethod.loadClass(aggregateRootClass));
+                                    }
+                                    return null;
+                                })
+                                .apply(classInfo)
+                );
     }
 
     @BuildStep
@@ -166,55 +165,53 @@ class BizFlowExtProcessor {
     @BuildStep
     void generateBaseJdbcPostgresqlEventRepository(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                    final BuildProducer<GeneratedBeanBuildItem> generatedBeanBuildItemBuildProducer) {
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
                 .getAllKnownSubclasses(AggregateRoot.class)
-                .forEach(classInfo -> {
-                    try {
-                        final Class<?> aggregateRootClass = classLoader.loadClass(classInfo.name().toString());
-                        assert AggregateRoot.class.isAssignableFrom(aggregateRootClass);
-                        final Class<?> aggregateIdClass = classLoader.loadClass(classInfo.superClassType().asParameterizedType().arguments().getFirst().toString());
-                        assert AggregateId.class.isAssignableFrom(aggregateIdClass);
-                        try (final ClassCreator beanClassCreator = ClassCreator.builder()
-                                .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer))
-                                .className(classInfo.name() + "JdbcPostgresqlEventRepositoryGenerated")
-                                .signature(SignatureBuilder.forClass()
-                                        .setSuperClass(
-                                                Type.parameterizedType(
-                                                        Type.classType(BaseJdbcPostgresqlEventRepository.class),
-                                                        Type.classType(aggregateIdClass),
-                                                        Type.classType(aggregateRootClass)))
-                                )
-                                .setFinal(false)
-                                .build()) {
-                            beanClassCreator.addAnnotation(Singleton.class);
-                            beanClassCreator.addAnnotation(DefaultBean.class);
+                .forEach(classInfo ->
+                        new AggregateRootTypesExtractor()
+                                .andThen(aggregateRootTypes -> {
+                                    final Class<?> aggregateRootClass = aggregateRootTypes.aggregateRootClass();
+                                    final Class<?> aggregateIdClass = aggregateRootTypes.aggregateIdClass();
+                                    try (final ClassCreator beanClassCreator = ClassCreator.builder()
+                                            .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer))
+                                            .className(classInfo.name() + "JdbcPostgresqlEventRepositoryGenerated")
+                                            .signature(SignatureBuilder.forClass()
+                                                    .setSuperClass(
+                                                            Type.parameterizedType(
+                                                                    Type.classType(BaseJdbcPostgresqlEventRepository.class),
+                                                                    Type.classType(aggregateIdClass),
+                                                                    Type.classType(aggregateRootClass)))
+                                            )
+                                            .setFinal(false)
+                                            .build()) {
+                                        beanClassCreator.addAnnotation(Singleton.class);
+                                        beanClassCreator.addAnnotation(DefaultBean.class);
 
-                            // constructor
-                            final MethodCreator constructor = beanClassCreator.getMethodCreator(MethodDescriptor.INIT, void.class,
-                                    AgroalDataSource.class, AggregateIdInstanceCreator.class, Instance.class);
-                            constructor.setSignature(
-                                    SignatureBuilder.forMethod()
-                                            .addParameterType(Type.classType(AgroalDataSource.class))
-                                            .addParameterType(Type.classType(AggregateIdInstanceCreator.class))
-                                            .addParameterType(Type.parameterizedType(Type.classType(Instance.class), Type.parameterizedType(Type.classType(AggregateRootEventPayloadSerde.class), Type.classType(aggregateRootClass), Type.wildcardTypeUnbounded())))
-                                            .setReturnType(Type.voidType())
-                                            .build());
-                            constructor.setModifiers(Modifier.PUBLIC);
-                            constructor.invokeSpecialMethod(MethodDescriptor.ofConstructor(BaseJdbcPostgresqlEventRepository.class, AgroalDataSource.class, AggregateIdInstanceCreator.class, Instance.class),
-                                    constructor.getThis(), constructor.getMethodParam(0), constructor.getMethodParam(1), constructor.getMethodParam(2));
-                            constructor.returnVoid();
+                                        // constructor
+                                        final MethodCreator constructor = beanClassCreator.getMethodCreator(MethodDescriptor.INIT, void.class,
+                                                AgroalDataSource.class, AggregateIdInstanceCreator.class, Instance.class);
+                                        constructor.setSignature(
+                                                SignatureBuilder.forMethod()
+                                                        .addParameterType(Type.classType(AgroalDataSource.class))
+                                                        .addParameterType(Type.classType(AggregateIdInstanceCreator.class))
+                                                        .addParameterType(Type.parameterizedType(Type.classType(Instance.class), Type.parameterizedType(Type.classType(AggregateRootEventPayloadSerde.class), Type.classType(aggregateRootClass), Type.wildcardTypeUnbounded())))
+                                                        .setReturnType(Type.voidType())
+                                                        .build());
+                                        constructor.setModifiers(Modifier.PUBLIC);
+                                        constructor.invokeSpecialMethod(MethodDescriptor.ofConstructor(BaseJdbcPostgresqlEventRepository.class, AgroalDataSource.class, AggregateIdInstanceCreator.class, Instance.class),
+                                                constructor.getThis(), constructor.getMethodParam(0), constructor.getMethodParam(1), constructor.getMethodParam(2));
+                                        constructor.returnVoid();
 
-                            // clazz
-                            final MethodCreator clazzMethod = beanClassCreator.getMethodCreator(
-                                    BaseJdbcPostgresqlEventRepositoryClassVisitor.AGGREGATE_ROOT_ID_CLASS_METHOD_NAMING, Class.class);
-                            clazzMethod.setModifiers(Opcodes.ACC_PROTECTED);
-                            clazzMethod.returnValue(clazzMethod.loadClass(aggregateIdClass));
-                        }
-                    } catch (final ClassNotFoundException classNotFoundException) {
-                        throw new IllegalStateException("Should not be here");
-                    }
-                });
+                                        // clazz
+                                        final MethodCreator clazzMethod = beanClassCreator.getMethodCreator(
+                                                BaseJdbcPostgresqlEventRepositoryClassVisitor.AGGREGATE_ROOT_ID_CLASS_METHOD_NAMING, Class.class);
+                                        clazzMethod.setModifiers(Opcodes.ACC_PROTECTED);
+                                        clazzMethod.returnValue(clazzMethod.loadClass(aggregateIdClass));
+                                    }
+                                    return null;
+                                })
+                                .apply(classInfo)
+                );
     }
 
     @BuildStep
