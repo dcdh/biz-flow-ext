@@ -411,6 +411,40 @@ class BizFlowExtProcessor {
     }
 
     @BuildStep
+    void validateBizMutationUseCaseRequestCommand(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                                  final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(BizMutationUseCase.class)
+                .forEach(classInfo ->
+                        new FindInterfaceFromClassInfo(BizMutationUseCase.class)
+                                .andThen(interfacePosition -> {
+                                    final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
+                                    assert arguments.size() == 3;
+                                    final int indexOfBizMutationUseCase = classInfo.simpleName().indexOf("BizMutationUseCase");
+                                    if (indexOfBizMutationUseCase > -1) {
+                                        final String expectedNaming = classInfo.simpleName().substring(0, indexOfBizMutationUseCase) + "CommandRequest";
+                                        new ExtractClassNaming()
+                                                .andThen(currentNaming -> {
+                                                    if (!expectedNaming.equals(currentNaming)) {
+                                                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                                                new IllegalStateException(String.format("Bad naming for command request '%s', expected '%s'",
+                                                                        currentNaming, expectedNaming))
+                                                        ));
+                                                    }
+                                                    return null;
+                                                })
+                                                .apply(arguments.get(1));
+                                    } else {
+                                        // bad naming. will be caught by expected build step
+                                        // TODO implement and name the build step
+                                    }
+                                    return null;
+                                })
+                                .apply(classInfo)
+                );
+    }
+
+    @BuildStep
     void validateBizQueryProjectionType(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                         final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -435,6 +469,40 @@ class BizFlowExtProcessor {
                                     } catch (final ClassNotFoundException classNotFoundException) {
                                         throw new IllegalStateException("Should not be here");
                                     }
+                                })
+                                .apply(classInfo)
+                );
+    }
+
+    @BuildStep
+    void validateBizQueryUseCaseRequestCommand(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                               final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(BizQueryUseCase.class)
+                .forEach(classInfo ->
+                        new FindInterfaceFromClassInfo(BizQueryUseCase.class)
+                                .andThen(interfacePosition -> {
+                                    final List<org.jboss.jandex.Type> arguments = ((ParameterizedType) classInfo.interfaceTypes().get(interfacePosition)).arguments();
+                                    assert arguments.size() == 3;
+                                    final int indexOfBizQueryUseCase = classInfo.simpleName().indexOf("BizQueryUseCase");
+                                    if (indexOfBizQueryUseCase > -1) {
+                                        final String expectedNaming = classInfo.simpleName().substring(0, indexOfBizQueryUseCase) + "QueryRequest";
+                                        new ExtractClassNaming()
+                                                .andThen(currentNaming -> {
+                                                    if (!expectedNaming.equals(currentNaming)) {
+                                                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                                                new IllegalStateException(String.format("Bad naming for query request '%s', expected '%s'",
+                                                                        currentNaming, expectedNaming))
+                                                        ));
+                                                    }
+                                                    return null;
+                                                })
+                                                .apply(arguments.get(1));
+                                    } else {
+                                        // bad naming. will be caught by expected build step
+                                        // TODO implement and name the build step
+                                    }
+                                    return null;
                                 })
                                 .apply(classInfo)
                 );
