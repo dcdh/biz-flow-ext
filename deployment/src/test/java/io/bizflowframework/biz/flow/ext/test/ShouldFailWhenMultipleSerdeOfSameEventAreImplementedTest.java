@@ -26,7 +26,7 @@ public class ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest {
             .assertException(throwable -> assertThat(throwable)
                     .hasNoSuppressedExceptions()
                     .rootCause()
-                    .hasMessage("Multiple implementations found for Serde 'AggregateRootEventPayloadKey[aggregateRootClassName=io.bizflowframework.biz.flow.ext.test.TodoAggregateRoot, eventPayloadClassName=io.bizflowframework.biz.flow.ext.test.event.TodoCreatedEvent]', only one is expected. Found implementations io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeOne, io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeTwo")
+                    .hasMessage("Multiple Serde implementations found for aggregate 'io.bizflowframework.biz.flow.ext.test.TodoAggregateRoot' and event 'io.bizflowframework.biz.flow.ext.test.event.TodoCreatedEvent', only one is expected. Found implementations io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeOne, io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeTwo")
                     .hasNoSuppressedExceptions());
 
     @Test

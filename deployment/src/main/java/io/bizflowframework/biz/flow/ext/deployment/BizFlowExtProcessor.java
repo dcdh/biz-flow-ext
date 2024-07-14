@@ -79,25 +79,27 @@ class BizFlowExtProcessor {
     void validateAtLeastOneSerdeIsImplementedPerAggregateRootAndAggregateRootEventPayload(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                                                           final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
         // First get all events per aggregate
-        final List<AggregateRootEventPayloadKey> aggregateRootEventPayloadKeys = applicationIndexBuildItem.getIndex()
+        final List<AggregateRootEventPayloadDescriptor> aggregateRootEventPayloadDescriptors = applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(AggregateRootEventPayload.class)
                 .stream()
                 .map(new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayload.class))
-                .map(new ExtractAggregateRootEventPayloadKeyFromPayload())
+                .map(new ExtractAggregateRootEventPayloadDescriptor())
                 .toList();
         // Next get all serde implementations
-        final List<AggregateRootEventPayloadKey> aggregateRootEventPayloadSerdeKeys = applicationIndexBuildItem.getIndex()
+        final List<AggregateRootEventPayloadSerdeDescriptor> aggregateRootEventPayloadSerdeDescriptors = applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(AggregateRootEventPayloadSerde.class)
                 .stream()
                 .map(new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayloadSerde.class))
-                .map(new ExtractAggregateRootEventPayloadKeyFromSerde())
+                .map(new ExtractAggregateRootEventPayloadSerdeDescriptor())
                 .toList();
         // Now check the matching
-        aggregateRootEventPayloadKeys.forEach(aggregateRootEventPayloadKey -> {
-            if (aggregateRootEventPayloadSerdeKeys.stream().noneMatch(aggregateRootEventPayloadSerdeKey -> aggregateRootEventPayloadSerdeKey.equals(aggregateRootEventPayloadKey))) {
+        aggregateRootEventPayloadDescriptors.forEach(aggregateRootEventPayloadDescriptor -> {
+            if (aggregateRootEventPayloadSerdeDescriptors.stream()
+                    .noneMatch(aggregateRootEventPayloadSerdeDescriptor -> aggregateRootEventPayloadSerdeDescriptor.belongsTo(aggregateRootEventPayloadDescriptor))) {
                 validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                         new IllegalStateException(String.format("Missing Serde for AggregateRoot '%s' and AggregateEventPayload '%s'",
-                                aggregateRootEventPayloadKey.aggregateRootClassName(), aggregateRootEventPayloadKey.eventPayloadClassName()))
+                                aggregateRootEventPayloadDescriptor.aggregateRootClass().getName(),
+                                aggregateRootEventPayloadDescriptor.eventPayloadClass().getName()))
                 ));
             }
         });
@@ -106,22 +108,25 @@ class BizFlowExtProcessor {
     @BuildStep
     void validateOnlyOneSerdeImplementationPerAggregateRootAndAggregateRootEventPayload(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                                                         final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
-        final Map<AggregateRootEventPayloadKey, List<ClassInfo>> serdeImplementationsByAggregateRootAndEventPayload = applicationIndexBuildItem.getIndex()
+        final Map<AggregateRootEventPayloadDescriptor, List<AggregateRootEventPayloadSerdeDescriptor>> serdeImplementationsByAggregateRootEventPayloadDescriptor = applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(AggregateRootEventPayloadSerde.class)
                 .stream()
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayloadSerde.class))
+                .map(new ExtractAggregateRootEventPayloadSerdeDescriptor())
                 .collect(Collectors.groupingBy(
-                        new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayloadSerde.class)
-                                .andThen(new ExtractAggregateRootEventPayloadKeyFromSerde())
+                        AggregateRootEventPayloadSerdeDescriptor::toAggregateRootEventPayloadDescriptor
                 ));
-        serdeImplementationsByAggregateRootAndEventPayload
+        serdeImplementationsByAggregateRootEventPayloadDescriptor
                 .forEach((key, implementors) -> {
                     if (implementors.size() > 1) {
-                        final String implementations = implementors.stream().map(implementor -> implementor.name().toString())
+                        final String implementations = implementors.stream().map(implementor -> implementor.aggregateRootEventPayloadSerde().getName())
                                 .sorted()
                                 .collect(Collectors.joining(", "));
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                new IllegalStateException(String.format("Multiple implementations found for Serde '%s', only one is expected. Found implementations %s",
-                                        key, implementations))
+                                new IllegalStateException(String.format("Multiple Serde implementations found for aggregate '%s' and event '%s', only one is expected. Found implementations %s",
+                                        key.aggregateRootClass().getName(),
+                                        key.eventPayloadClass().getName(),
+                                        implementations))
                         ));
                     }
                 });
