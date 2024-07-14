@@ -26,7 +26,7 @@ public class ShouldFailWhenBizQueryUseCaseNamingConventionIsNotRespectedTest {
             .assertException(throwable -> assertThat(throwable)
                     .hasNoSuppressedExceptions()
                     .rootCause()
-                    .hasMessage("Bad naming for 'ListTodoBizQueryUseCaseBadNaming', must end with 'BizQueryUseCase'")
+                    .hasMessage("Bad naming for 'io.bizflowframework.biz.flow.ext.test.ShouldFailWhenBizQueryUseCaseNamingConventionIsNotRespectedTest$ListTodoBizQueryUseCaseBadNaming', must end with 'BizQueryUseCase'")
                     .hasNoSuppressedExceptions());
 
     @Test

@@ -428,7 +428,7 @@ class BizFlowExtProcessor {
                             .test(implementor);
                     if (!isUseCaseNamingWellDefined) {
                         LOGGER.warnf("Unable to validate exception naming for '%s' because the use case is bad named to check it. Use case naming will fail via 'validateBizMutationUseCaseNaming' or 'validateBizQueryUseCaseNaming' build steps.",
-                                implementor.simpleName());
+                                implementor.name());
                     }
                     return isUseCaseNamingWellDefined;
                 })
@@ -479,7 +479,7 @@ class BizFlowExtProcessor {
                 .forEach(implementor ->
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                 new IllegalStateException(String.format("Bad naming for '%s', must end with '%s'",
-                                        implementor.simpleName(), bizMutationUseCaseClass.getSimpleName()))
+                                        implementor.name(), bizMutationUseCaseClass.getSimpleName()))
                         ))
                 );
     }
@@ -540,7 +540,7 @@ class BizFlowExtProcessor {
                 .forEach(implementor ->
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                 new IllegalStateException(String.format("Bad naming for '%s', must end with '%s'",
-                                        implementor.simpleName(), bizQueryUseCaseClass.getSimpleName()))
+                                        implementor.name(), bizQueryUseCaseClass.getSimpleName()))
                         ))
                 );
     }

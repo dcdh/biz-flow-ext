@@ -25,7 +25,7 @@ public class ShouldFailWhenBizMutationUseCaseNamingConventionIsNotRespectedTest 
             .assertException(throwable -> assertThat(throwable)
                     .hasNoSuppressedExceptions()
                     .rootCause()
-                    .hasMessage("Bad naming for 'CreateTodoBizMutationUseCaseBadNaming', must end with 'BizMutationUseCase'")
+                    .hasMessage("Bad naming for 'io.bizflowframework.biz.flow.ext.test.ShouldFailWhenBizMutationUseCaseNamingConventionIsNotRespectedTest$CreateTodoBizMutationUseCaseBadNaming', must end with 'BizMutationUseCase'")
                     .hasNoSuppressedExceptions());
 
     @Test
