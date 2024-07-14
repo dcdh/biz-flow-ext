@@ -45,6 +45,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -326,133 +327,120 @@ class BizFlowExtProcessor {
     @BuildStep
     void validateAggregateRootEventPayloadType(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        final Class<?> aggregateRootEventPayloadClass = AggregateRootEventPayload.class;
+        final LoadImplementorClass loadImplementorClass = new LoadImplementorClass(aggregateRootEventPayloadClass);
+        final IsClassARecord isClassARecord = new IsClassARecord();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(AggregateRootEventPayload.class)
-                .forEach(classInfo -> {
-                    try {
-                        final Class<?> aggregateRootEventPayload = classLoader.loadClass(classInfo.name().toString());
-                        assert AggregateRootEventPayload.class.isAssignableFrom(aggregateRootEventPayload);
-                        if (!aggregateRootEventPayload.isRecord()) {
-                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                    new IllegalStateException(String.format("Domain Event '%s' must be a record", aggregateRootEventPayload.getName()))
-                            ));
-                        }
-                    } catch (final ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                .getAllKnownImplementors(aggregateRootEventPayloadClass)
+                .stream()
+                .map(loadImplementorClass)
+                .filter(Predicate.not(isClassARecord))
+                .forEach(invalidClazz ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("Domain Event '%s' must be a record", invalidClazz.getName()))
+                        ))
+                );
     }
 
     @BuildStep
     void validateCommandRequestType(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                     final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        final Class<?> commandRequestClass = CommandRequest.class;
+        final LoadImplementorClass loadImplementorClass = new LoadImplementorClass(commandRequestClass);
+        final IsClassARecord isClassARecord = new IsClassARecord();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(CommandRequest.class)
-                .forEach(classInfo -> {
-                    try {
-                        final Class<?> commandRequest = classLoader.loadClass(classInfo.name().toString());
-                        assert CommandRequest.class.isAssignableFrom(commandRequest);
-                        if (!commandRequest.isRecord()) {
-                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                    new IllegalStateException(String.format("CommandRequest '%s' must be a record", commandRequest.getName()))
-                            ));
-                        }
-                    } catch (final ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                .getAllKnownImplementors(commandRequestClass)
+                .stream()
+                .map(loadImplementorClass)
+                .filter(Predicate.not(isClassARecord))
+                .forEach(invalidClazz ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("CommandRequest '%s' must be a record", invalidClazz.getName()))
+                        ))
+                );
     }
 
     @BuildStep
     void validateAggregateCommandRequestType(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                              final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        final Class<?> aggregateCommandRequestClass = AggregateCommandRequest.class;
+        final LoadImplementorClass loadImplementorClass = new LoadImplementorClass(aggregateCommandRequestClass);
+        final IsClassARecord isClassARecord = new IsClassARecord();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(AggregateCommandRequest.class)
-                // TODO validate TypeAssignable
-                .forEach(classInfo -> {
-                    try {
-                        final Class<?> aggregateCommandRequest = classLoader.loadClass(classInfo.name().toString());
-                        assert AggregateCommandRequest.class.isAssignableFrom(aggregateCommandRequest);
-                        if (!aggregateCommandRequest.isRecord()) {
-                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                    new IllegalStateException(String.format("AggregateCommandRequest '%s' must be a record", aggregateCommandRequest.getName()))
-                            ));
-                        }
-                    } catch (final ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                .getAllKnownImplementors(aggregateCommandRequestClass)
+                .stream()
+                .map(loadImplementorClass)
+                .filter(Predicate.not(isClassARecord))
+                .forEach(invalidClazz ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("AggregateCommandRequest '%s' must be a record", invalidClazz.getName()))
+                        ))
+                );
     }
 
     @BuildStep
     void validateQueryRequestType(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                   final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        final Class<?> queryRequestClass = QueryRequest.class;
+        final LoadImplementorClass loadImplementorClass = new LoadImplementorClass(queryRequestClass);
+        final IsClassARecord isClassARecord = new IsClassARecord();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(QueryRequest.class)
-                .forEach(classInfo -> {
-                    try {
-                        final Class<?> queryRequest = classLoader.loadClass(classInfo.name().toString());
-                        assert QueryRequest.class.isAssignableFrom(queryRequest);
-                        if (!queryRequest.isRecord()) {
-                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                    new IllegalStateException(String.format("QueryRequest '%s' must be a record", queryRequest.getName()))
-                            ));
-                        }
-                    } catch (final ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                .getAllKnownImplementors(queryRequestClass)
+                .stream()
+                .map(loadImplementorClass)
+                .filter(Predicate.not(isClassARecord))
+                .forEach(invalidClazz ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("QueryRequest '%s' must be a record", invalidClazz.getName()))
+                        ))
+                );
     }
 
     @BuildStep
     void validateAggregateId(final ApplicationIndexBuildItem applicationIndexBuildItem,
                              final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        final Class<AggregateId> aggregateIdClass = AggregateId.class;
+        final LoadImplementorClass loadImplementorClass = new LoadImplementorClass(aggregateIdClass);
+        final IsClassARecord isClassARecord = new IsClassARecord();
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(AggregateId.class)
-                .forEach(classInfo -> {
-                    try {
-                        final Class<?> aggregateId = classLoader.loadClass(classInfo.name().toString());
-                        assert AggregateId.class.isAssignableFrom(aggregateId);
-                        if (!aggregateId.isRecord()) {
-                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                    new IllegalStateException(String.format("AggregateId '%s' must be a record", aggregateId.getName()))
-                            ));
-                        }
-                    } catch (final ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                .getAllKnownImplementors(aggregateIdClass)
+                .stream()
+                .map(loadImplementorClass)
+                .filter(Predicate.not(isClassARecord))
+                .forEach(invalidClazz ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("AggregateId '%s' must be a record", invalidClazz.getName()))
+                        ))
+                );
     }
 
     @BuildStep
     void validateUseCaseExceptionNaming(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                         final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
-        final Collection<ClassInfo> allBizMutationUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(BizMutationUseCase.class);
-        final Collection<ClassInfo> allBizQueryUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(BizQueryUseCase.class);
-
+        final Class<?> bizMutationUseCaseClass = BizMutationUseCase.class;
+        final Class<?> bizQueryUseCaseClass = BizQueryUseCase.class;
+        final Collection<ClassInfo> allBizMutationUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(bizMutationUseCaseClass);
+        final Collection<ClassInfo> allBizQueryUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(bizQueryUseCaseClass);
         Stream.concat(allBizMutationUseCaseImplementors.stream(), allBizQueryUseCaseImplementors.stream())
-                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class, BizQueryUseCase.class))
-                .map(UseCaseExceptionNamingValidator::new)
-                .filter(UseCaseExceptionNamingValidator::hasOnlyOneExceptionDefined)
-                .filter(validator -> {
-                    if (validator.isUseCaseWellDefined()) {
-                        return validator.isInvalid();
-                    } else {
+                .filter(implementor -> {
+                    final boolean isUseCaseNamingWellDefined = new IsImplementorNameDoesEndsWithClazzByName(bizMutationUseCaseClass)
+                            .or(new IsImplementorNameDoesEndsWithClazzByName(bizQueryUseCaseClass))
+                            .test(implementor);
+                    if (!isUseCaseNamingWellDefined) {
                         LOGGER.warnf("Unable to validate exception naming for '%s' because the use case is bad named to check it. Use case naming will fail via 'validateBizMutationUseCaseNaming' or 'validateBizQueryUseCaseNaming' build steps.",
-                                validator.implementorSimpleName());
-                        return false;
+                                implementor.simpleName());
                     }
+                    return isUseCaseNamingWellDefined;
                 })
-                .forEach(invalid ->
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(bizMutationUseCaseClass, bizQueryUseCaseClass))
+                .filter(Predicate.not(new IsUseCaseImplementMultipleExceptions()))
+                .filter(Predicate.not(new IsUseCaseExceptionNamingValid()))
+                .forEach(extracted ->
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                 new IllegalStateException(String.format("'%s' execute method must define an exception called '%s' got '%s'",
-                                        invalid.implementorName(),
-                                        invalid.expectedExceptionNaming(), invalid.exceptionNaming()))
+                                        extracted.implementor().name(),
+                                        IsUseCaseExceptionNamingValid.expectedExceptionNaming(extracted),
+                                        IsUseCaseExceptionNamingValid.exceptionNaming(extracted)))
                         ))
                 );
     }
@@ -460,16 +448,20 @@ class BizFlowExtProcessor {
     @BuildStep
     void validateUseCaseHasOnlyOneException(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                             final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
-        final Collection<ClassInfo> allBizMutationUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(BizMutationUseCase.class);
-        final Collection<ClassInfo> allBizQueryUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(BizQueryUseCase.class);
+        final Class<?> bizMutationUseCaseClass = BizMutationUseCase.class;
+        final Class<?> bizQueryUseCaseClass = BizQueryUseCase.class;
+        final IsUseCaseImplementMultipleExceptions isUseCaseImplementMultipleExceptions = new IsUseCaseImplementMultipleExceptions();
+        final Collection<ClassInfo> allBizMutationUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(bizMutationUseCaseClass);
+        final Collection<ClassInfo> allBizQueryUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(bizQueryUseCaseClass);
 
         Stream.concat(allBizMutationUseCaseImplementors.stream(), allBizQueryUseCaseImplementors.stream())
-                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class, BizQueryUseCase.class))
-                .map(UseCaseOnlyOneExceptionValidator::new)
-                .filter(UseCaseOnlyOneExceptionValidator::isInvalid)
-                .forEach(invalid ->
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(bizMutationUseCaseClass, bizQueryUseCaseClass))
+                .filter(isUseCaseImplementMultipleExceptions)
+                .forEach(extracted ->
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                new IllegalStateException(String.format("'%s' execute method must define only one exception called '%s'", invalid.implementorNaming(), invalid.expectedExceptionNaming()))
+                                new IllegalStateException(String.format("'%s' execute method must define only one exception called '%s'",
+                                        extracted.implementor().name(),
+                                        IsUseCaseExceptionNamingValid.expectedExceptionNaming(extracted)))
                         ))
                 );
     }
@@ -477,15 +469,17 @@ class BizFlowExtProcessor {
     @BuildStep
     void validateBizMutationUseCaseNaming(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                           final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Class<?> bizMutationUseCaseClass = BizMutationUseCase.class;
+        final IsImplementorNameDoesEndsWithClazzByName isImplementorNameDoesEndsWithClazzByName
+                = new IsImplementorNameDoesEndsWithClazzByName(bizMutationUseCaseClass);
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(BizMutationUseCase.class)
+                .getAllKnownImplementors(bizMutationUseCaseClass)
                 .stream()
-                .map(classInfo -> new UseCaseNamingValidator(classInfo, BizMutationUseCase.class))
-                .filter(UseCaseNamingValidator::isInvalid)
-                .forEach(validator ->
+                .filter(Predicate.not(isImplementorNameDoesEndsWithClazzByName))
+                .forEach(implementor ->
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                 new IllegalStateException(String.format("Bad naming for '%s', must end with '%s'",
-                                        validator.implementorSimpleName(), validator.mustEndWith()))
+                                        implementor.simpleName(), bizMutationUseCaseClass.getSimpleName()))
                         ))
                 );
     }
@@ -493,38 +487,42 @@ class BizFlowExtProcessor {
     @BuildStep
     void validateBizMutationUseCaseRequestCommand(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                   final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Class<?> bizMutationUseCaseClass = BizMutationUseCase.class;
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(BizMutationUseCase.class)
+                .getAllKnownImplementors(bizMutationUseCaseClass)
                 .stream()
-                .map(BizMutationUseCaseRequestCommandValidator::new)
-                .filter(validator -> {
-                    if (validator.canValidate()) {
-                        return validator.isInvalid();
-                    } else {
+                .filter(implementor -> {
+                    final boolean isNameValid = new IsImplementorNameDoesEndsWithClazzByName(bizMutationUseCaseClass)
+                            .test(implementor);
+                    if (!isNameValid) {
                         LOGGER.warnf("Unable to validate command request naming for '%s' because the use case is bad named to validate it. Use case naming will fail via 'validateBizMutationUseCaseNaming' build step.",
-                                validator.useCaseNaming());
-                        return false;
+                                implementor.name());
                     }
+                    return isNameValid;
                 })
-                .forEach(validator ->
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(bizMutationUseCaseClass))
+                .filter(Predicate.not(new IsBizMutationUseCaseRequestCommandValid()))
+                .forEach(extracted ->
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                 new IllegalStateException(String.format("Bad naming for command request '%s', expected '%s'",
-                                        validator.commandRequestCurrentNaming(), validator.commandRequestExpectedNaming()))
+                                        IsBizMutationUseCaseRequestCommandValid.commandRequestCurrentNaming(extracted),
+                                        IsBizMutationUseCaseRequestCommandValid.commandRequestExpectedNaming(extracted)))
                         )));
     }
 
     @BuildStep
     void validateBizQueryUseCaseProjectionType(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Class<?> bizQueryUseCaseClass = BizQueryUseCase.class;
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(BizQueryUseCase.class)
+                .getAllKnownImplementors(bizQueryUseCaseClass)
                 .stream()
-                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(BizQueryUseCase.class))
-                .map(BizQueryUseCaseProjectionTypeValidator::new)// FCK je devrais avoir un autre nommage qui prennent les classes assignable en entrée ...
-                .filter(BizQueryUseCaseProjectionTypeValidator::isInvalid)
-                .forEach(invalid ->
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(bizQueryUseCaseClass))
+                .filter(Predicate.not(new IsBizQueryUseCaseProjectionTypeValid()))
+                .forEach(extracted ->
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                new IllegalStateException(String.format("BizQueryUseCase '%s' projection must implement VersionedProjection or be a ListOfProjection", invalid.implementorNaming()))
+                                new IllegalStateException(String.format("BizQueryUseCase '%s' projection must implement VersionedProjection or be a ListOfProjection",
+                                        extracted.implementor().name()))
                         ))
                 );
     }
@@ -532,15 +530,17 @@ class BizFlowExtProcessor {
     @BuildStep
     void validateBizQueryUseCaseNaming(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                        final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Class<?> bizQueryUseCaseClass = BizQueryUseCase.class;
+        final IsImplementorNameDoesEndsWithClazzByName isImplementorNameDoesEndsWithClazzByName
+                = new IsImplementorNameDoesEndsWithClazzByName(bizQueryUseCaseClass);
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(BizQueryUseCase.class)
+                .getAllKnownImplementors(bizQueryUseCaseClass)
                 .stream()
-                .map(implementor -> new UseCaseNamingValidator(implementor, BizQueryUseCase.class))
-                .filter(UseCaseNamingValidator::isInvalid)
-                .forEach(validator ->
+                .filter(Predicate.not(isImplementorNameDoesEndsWithClazzByName))
+                .forEach(implementor ->
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                 new IllegalStateException(String.format("Bad naming for '%s', must end with '%s'",
-                                        validator.implementorSimpleName(), validator.mustEndWith()))
+                                        implementor.simpleName(), bizQueryUseCaseClass.getSimpleName()))
                         ))
                 );
     }
@@ -548,23 +548,26 @@ class BizFlowExtProcessor {
     @BuildStep
     void validateBizQueryUseCaseRequestCommand(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Class<?> bizQueryUseCaseClass = BizQueryUseCase.class;
         applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(BizQueryUseCase.class)
+                .getAllKnownImplementors(bizQueryUseCaseClass)
                 .stream()
-                .map(BizQueryUseCaseRequestCommandValidator::new)
-                .filter(validator -> {
-                    if (validator.canValidate()) {
-                        return validator.isInvalid();
-                    } else {
+                .filter(implementor -> {
+                    final boolean isNameValid = new IsImplementorNameDoesEndsWithClazzByName(bizQueryUseCaseClass)
+                            .test(implementor);
+                    if (!isNameValid) {
                         LOGGER.warnf("Unable to validate query request naming for '%s' because the use case is bad named to validate it. Use case naming will fail via 'validateBizQueryUseCaseNaming' build step.",
-                                validator.useCaseNaming());
-                        return false;
+                                implementor.name());
                     }
+                    return isNameValid;
                 })
-                .forEach(validator ->
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(bizQueryUseCaseClass))
+                .filter(Predicate.not(new IsBizQueryUseCaseRequestCommandValid()))
+                .forEach(extracted ->
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
                                 new IllegalStateException(String.format("Bad naming for query request '%s', expected '%s'",
-                                        validator.queryRequestCurrentNaming(), validator.queryRequestExpectedNaming()))
+                                        IsBizQueryUseCaseRequestCommandValid.queryRequestCurrentNaming(extracted),
+                                        IsBizQueryUseCaseRequestCommandValid.queryRequestExpectedNaming(extracted)))
                         )));
     }
 

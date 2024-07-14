@@ -5,8 +5,8 @@ import org.jboss.jandex.ParameterizedType;
 
 import java.util.Objects;
 
-public record ExtractInterfaceParameterizedTypeResult(ClassInfo implementor, ParameterizedType parameterizedType) {
-    public ExtractInterfaceParameterizedTypeResult {
+public record ExtractedInterfaceParameterizedType(ClassInfo implementor, ParameterizedType parameterizedType) {
+    public ExtractedInterfaceParameterizedType {
         Objects.requireNonNull(implementor);
         Objects.requireNonNull(parameterizedType);
     }

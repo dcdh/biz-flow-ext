@@ -10,7 +10,7 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 
 public record ExtractInterfaceParameterizedTypeFromClassInfo(
-        List<Class<?>> interfacesToFind) implements Function<ClassInfo, ExtractInterfaceParameterizedTypeResult> {
+        List<Class<?>> interfacesToFind) implements Function<ClassInfo, ExtractedInterfaceParameterizedType> {
 
     public ExtractInterfaceParameterizedTypeFromClassInfo(final Class<?>... interfacesToFind) {
         this(Arrays.asList(interfacesToFind));
@@ -21,15 +21,16 @@ public record ExtractInterfaceParameterizedTypeFromClassInfo(
     }
 
     @Override
-    public ExtractInterfaceParameterizedTypeResult apply(final ClassInfo implementor) {
+    public ExtractedInterfaceParameterizedType apply(final ClassInfo implementor) {
         final List<DotName> interfaceDotNames = implementor.interfaceNames();
         final int position = IntStream.range(0, interfaceDotNames.size())
                 .filter(index -> interfacesToFind
                         .stream().map(Class::getName)
                         .anyMatch(interfaceToFind -> interfaceToFind.equals(interfaceDotNames.get(index).toString())))
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Should not be here"));
-        return new ExtractInterfaceParameterizedTypeResult(implementor,
+                .orElseThrow(() ->
+                        new IllegalStateException("Should not be here"));
+        return new ExtractedInterfaceParameterizedType(implementor,
                 (ParameterizedType) implementor.interfaceTypes().get(position));
     }
 }
