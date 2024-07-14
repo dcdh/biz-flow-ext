@@ -2,8 +2,8 @@ package io.bizflowframework.biz.flow.ext.it.domain;
 
 import io.bizflowframework.biz.flow.ext.it.domain.usecase.CreateNewTodoCommandRequest;
 import io.bizflowframework.biz.flow.ext.it.domain.usecase.MarkTodoAsCompletedCommandRequest;
-import io.bizflowframework.biz.flow.ext.it.domain.event.TodoCreated;
-import io.bizflowframework.biz.flow.ext.it.domain.event.TodoMarkedAsCompleted;
+import io.bizflowframework.biz.flow.ext.it.domain.event.TodoCreatedEvent;
+import io.bizflowframework.biz.flow.ext.it.domain.event.TodoMarkedAsCompletedEvent;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRoot;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.CreatedAtProvider;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.incrementer.AggregateVersionIncrementer;
@@ -22,7 +22,7 @@ public final class TodoAggregateRoot extends AggregateRoot<TodoId, TodoAggregate
     }
 
     public void handle(final CreateNewTodoCommandRequest createNewTodoCommand) {
-        this.apply(new TodoCreated(createNewTodoCommand.description()));
+        this.apply(new TodoCreatedEvent(createNewTodoCommand.description()));
     }
 
     public void handle(final MarkTodoAsCompletedCommandRequest markTodoAsCompletedCommand)
@@ -30,15 +30,15 @@ public final class TodoAggregateRoot extends AggregateRoot<TodoId, TodoAggregate
         if (TodoStatus.COMPLETED.equals(status)) {
             throw new TodoAlreadyMarkedAsCompletedException(markTodoAsCompletedCommand.todoId());
         }
-        this.apply(new TodoMarkedAsCompleted());
+        this.apply(new TodoMarkedAsCompletedEvent());
     }
 
-    public void on(final TodoCreated todoCreated) {
-        this.description = todoCreated.description();
+    public void on(final TodoCreatedEvent todoCreatedEvent) {
+        this.description = todoCreatedEvent.description();
         this.status = TodoStatus.IN_PROGRESS;
     }
 
-    public void on(final TodoMarkedAsCompleted todoMarkedAsCompleted) {
+    public void on(final TodoMarkedAsCompletedEvent todoMarkedAsCompletedEvent) {
         this.status = TodoStatus.COMPLETED;
     }
 

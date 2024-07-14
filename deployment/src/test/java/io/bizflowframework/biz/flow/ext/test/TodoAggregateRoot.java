@@ -3,8 +3,8 @@ package io.bizflowframework.biz.flow.ext.test;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRoot;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.CreatedAtProvider;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.incrementer.AggregateVersionIncrementer;
-import io.bizflowframework.biz.flow.ext.test.event.TodoCreated;
-import io.bizflowframework.biz.flow.ext.test.event.TodoMarkedAsCompleted;
+import io.bizflowframework.biz.flow.ext.test.event.TodoCreatedEvent;
+import io.bizflowframework.biz.flow.ext.test.event.TodoMarkedAsCompletedEvent;
 
 import java.util.Objects;
 
@@ -20,19 +20,19 @@ public final class TodoAggregateRoot extends AggregateRoot<TodoId, TodoAggregate
     }
 
     public void createNewTodo(final String description) {
-        this.apply(new TodoCreated(description));
+        this.apply(new TodoCreatedEvent(description));
     }
 
     public void markTodoAsCompleted() {
-        this.apply(new TodoMarkedAsCompleted());
+        this.apply(new TodoMarkedAsCompletedEvent());
     }
 
-    public void on(final TodoCreated todoCreated) {
-        this.description = todoCreated.description();
+    public void on(final TodoCreatedEvent todoCreatedEvent) {
+        this.description = todoCreatedEvent.description();
         this.status = TodoStatus.IN_PROGRESS;
     }
 
-    public void on(final TodoMarkedAsCompleted todoMarkedAsCompleted) {
+    public void on(final TodoMarkedAsCompletedEvent todoMarkedAsCompletedEvent) {
         this.status = TodoStatus.COMPLETED;
     }
 

@@ -2,8 +2,8 @@ package io.bizflowframework.biz.flow.ext.it.domain.query;
 
 import io.bizflowframework.biz.flow.ext.it.domain.TodoId;
 import io.bizflowframework.biz.flow.ext.it.domain.TodoStatus;
-import io.bizflowframework.biz.flow.ext.it.domain.event.TodoCreated;
-import io.bizflowframework.biz.flow.ext.it.domain.event.TodoMarkedAsCompleted;
+import io.bizflowframework.biz.flow.ext.it.domain.event.TodoCreatedEvent;
+import io.bizflowframework.biz.flow.ext.it.domain.event.TodoMarkedAsCompletedEvent;
 import io.bizflowframework.biz.flow.ext.runtime.AggregateId;
 import io.bizflowframework.biz.flow.ext.runtime.AggregateVersion;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRootIdentifier;
@@ -36,7 +36,7 @@ public final class QueryTodoProjection implements VersionedProjection {
     public QueryTodoProjection(final AggregateRootIdentifier<TodoId> aggregateRootIdentifier,
                                final AggregateVersion aggregateVersion,
                                final CreatedAt createdAt,
-                               final TodoCreated payload) {
+                               final TodoCreatedEvent payload) {
         this(aggregateRootIdentifier.aggregateId(),
                 payload.description(),
                 TodoStatus.IN_PROGRESS,
@@ -44,7 +44,7 @@ public final class QueryTodoProjection implements VersionedProjection {
                 aggregateVersion);
     }
 
-    public QueryTodoProjection handle(final TodoMarkedAsCompleted todoMarkedAsCompleted,
+    public QueryTodoProjection handle(final TodoMarkedAsCompletedEvent todoMarkedAsCompletedEvent,
                                       final AggregateVersion aggregateVersion) {
         this.status = TodoStatus.COMPLETED;
         this.aggregateVersion = Objects.requireNonNull(aggregateVersion);

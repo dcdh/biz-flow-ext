@@ -635,6 +635,22 @@ class BizFlowExtProcessor {
                         ));
     }
 
+    @BuildStep
+    void validateEventNaming(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                             final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final IsEventNameValid isEventNameValid = new IsEventNameValid();
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(AggregateRootEventPayload.class)
+                .stream()
+                .filter(Predicate.not(isEventNameValid))
+                .forEach(implementor ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("Bad naming for '%s', must end with 'Event'",
+                                        implementor.name()))
+                        ))
+                );
+    }
+
     // TODO discover endpoint and check that only use cases are injected
     // TODO check that all beans use constructor injection by scanning @Inject fields and disallow them
     // TODO check presence of openapi annotations

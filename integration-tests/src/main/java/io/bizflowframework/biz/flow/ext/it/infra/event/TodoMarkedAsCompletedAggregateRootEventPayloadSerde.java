@@ -1,16 +1,16 @@
 package io.bizflowframework.biz.flow.ext.it.infra.event;
 
 import io.bizflowframework.biz.flow.ext.it.domain.TodoAggregateRoot;
-import io.bizflowframework.biz.flow.ext.it.domain.event.TodoMarkedAsCompleted;
+import io.bizflowframework.biz.flow.ext.it.domain.event.TodoMarkedAsCompletedEvent;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.AggregateRootEventPayloadSerde;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.SerializedEventPayload;
 import jakarta.inject.Singleton;
 import jakarta.json.Json;
 
 @Singleton
-public final class TodoMarkedAsCompletedAggregateRootEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoMarkedAsCompleted> {
+public final class TodoMarkedAsCompletedAggregateRootEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoMarkedAsCompletedEvent> {
     @Override
-    public SerializedEventPayload serialize(final TodoMarkedAsCompleted selfAggregateRootEventPayload) {
+    public SerializedEventPayload serialize(final TodoMarkedAsCompletedEvent selfAggregateRootEventPayload) {
         final String event = Json.createObjectBuilder()
                 .build()
                 .toString();
@@ -18,7 +18,7 @@ public final class TodoMarkedAsCompletedAggregateRootEventPayloadSerde implement
     }
 
     @Override
-    public TodoMarkedAsCompleted deserialize(final SerializedEventPayload serializedEventPayload) {
-        return new TodoMarkedAsCompleted();
+    public TodoMarkedAsCompletedEvent deserialize(final SerializedEventPayload serializedEventPayload) {
+        return new TodoMarkedAsCompletedEvent();
     }
 }

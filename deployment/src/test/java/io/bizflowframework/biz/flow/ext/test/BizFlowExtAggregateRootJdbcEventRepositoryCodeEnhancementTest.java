@@ -26,8 +26,8 @@ public class BizFlowExtAggregateRootJdbcEventRepositoryCodeEnhancementTest {
                     .addClass(TodoAggregateRoot.class)
                     .addClass(TodoId.class)
                     .addClass(TodoStatus.class)
-                    .addClass(TodoCreated.class)
-                    .addClass(TodoMarkedAsCompleted.class)
+                    .addClass(TodoCreatedEvent.class)
+                    .addClass(TodoMarkedAsCompletedEvent.class)
                     .addClass(TodoCreatedAggregateRootEventPayloadSerde.class)
                     .addClass(TodoMarkedAsCompletedAggregateRootEventPayloadSerde.class)
                     .addClass(TodoAggregateBaseJdbcPostgresqlEventRepositoryEnhanced.class)
@@ -54,7 +54,7 @@ public class BizFlowExtAggregateRootJdbcEventRepositoryCodeEnhancementTest {
             insertFixturePreparedStatement.setString(2, "TodoAggregateRoot");
             insertFixturePreparedStatement.setLong(3, 0);
             insertFixturePreparedStatement.setObject(4, LocalDateTime.of(1983, Month.JULY, 27, 19, 30));
-            insertFixturePreparedStatement.setString(5, "TodoCreated");
+            insertFixturePreparedStatement.setString(5, "TodoCreatedEvent");
             insertFixturePreparedStatement.setString(6, "{\"description\": \"lorem ipsum dolor sit amet\"}");
             insertFixturePreparedStatement.executeUpdate();
         } catch (final SQLException e) {

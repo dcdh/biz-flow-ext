@@ -2,7 +2,7 @@ package io.bizflowframework.biz.flow.ext.test;
 
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.AggregateRootEventPayloadSerde;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.SerializedEventPayload;
-import io.bizflowframework.biz.flow.ext.test.event.TodoCreated;
+import io.bizflowframework.biz.flow.ext.test.event.TodoCreatedEvent;
 import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,7 @@ public class ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest {
             .withApplicationRoot(jar -> jar
                     .addClasses(TodoId.class,
                             TodoAggregateRoot.class,
-                            TodoCreated.class,
+                            TodoCreatedEvent.class,
                             TodoCreatedAggregateRootEventPayloadSerdeOne.class,
                             TodoCreatedAggregateRootEventPayloadSerdeTwo.class)
                     .addAsResource("application.properties")
@@ -26,7 +26,7 @@ public class ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest {
             .assertException(throwable -> assertThat(throwable)
                     .hasNoSuppressedExceptions()
                     .rootCause()
-                    .hasMessage("Multiple implementations found for Serde 'AggregateRootEventPayloadKey[aggregateRootClassName=io.bizflowframework.biz.flow.ext.test.TodoAggregateRoot, eventPayloadClassName=io.bizflowframework.biz.flow.ext.test.event.TodoCreated]', only one is expected. Found implementations io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeOne, io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeTwo")
+                    .hasMessage("Multiple implementations found for Serde 'AggregateRootEventPayloadKey[aggregateRootClassName=io.bizflowframework.biz.flow.ext.test.TodoAggregateRoot, eventPayloadClassName=io.bizflowframework.biz.flow.ext.test.event.TodoCreatedEvent]', only one is expected. Found implementations io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeOne, io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeTwo")
                     .hasNoSuppressedExceptions());
 
     @Test
@@ -34,14 +34,14 @@ public class ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest {
         Assertions.fail("Startup should have failed");
     }
 
-    private static final class TodoCreatedAggregateRootEventPayloadSerdeOne implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoCreated> {
+    private static final class TodoCreatedAggregateRootEventPayloadSerdeOne implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoCreatedEvent> {
         @Override
-        public SerializedEventPayload serialize(final TodoCreated selfAggregateRootEventPayload) {
+        public SerializedEventPayload serialize(final TodoCreatedEvent selfAggregateRootEventPayload) {
             throw new IllegalStateException("Should not be called");
         }
 
         @Override
-        public TodoCreated deserialize(final SerializedEventPayload serializedEventPayload) {
+        public TodoCreatedEvent deserialize(final SerializedEventPayload serializedEventPayload) {
             throw new IllegalStateException("Should not be called");
         }
 
@@ -51,19 +51,19 @@ public class ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest {
         }
 
         @Override
-        public Class<TodoCreated> aggregateRootEventPayloadClass() {
-            return TodoCreated.class;
+        public Class<TodoCreatedEvent> aggregateRootEventPayloadClass() {
+            return TodoCreatedEvent.class;
         }
     }
 
-    private static final class TodoCreatedAggregateRootEventPayloadSerdeTwo implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoCreated> {
+    private static final class TodoCreatedAggregateRootEventPayloadSerdeTwo implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoCreatedEvent> {
         @Override
-        public SerializedEventPayload serialize(final TodoCreated selfAggregateRootEventPayload) {
+        public SerializedEventPayload serialize(final TodoCreatedEvent selfAggregateRootEventPayload) {
             throw new IllegalStateException("Should not be called");
         }
 
         @Override
-        public TodoCreated deserialize(final SerializedEventPayload serializedEventPayload) {
+        public TodoCreatedEvent deserialize(final SerializedEventPayload serializedEventPayload) {
             throw new IllegalStateException("Should not be called");
         }
 
@@ -73,8 +73,8 @@ public class ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest {
         }
 
         @Override
-        public Class<TodoCreated> aggregateRootEventPayloadClass() {
-            return TodoCreated.class;
+        public Class<TodoCreatedEvent> aggregateRootEventPayloadClass() {
+            return TodoCreatedEvent.class;
         }
     }
 }

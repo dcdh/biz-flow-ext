@@ -1,7 +1,7 @@
 package io.bizflowframework.biz.flow.ext.it.infra.event;
 
 import io.bizflowframework.biz.flow.ext.it.domain.TodoAggregateRoot;
-import io.bizflowframework.biz.flow.ext.it.domain.event.TodoCreated;
+import io.bizflowframework.biz.flow.ext.it.domain.event.TodoCreatedEvent;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.AggregateRootEventPayloadSerde;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.SerializedEventPayload;
 import jakarta.inject.Singleton;
@@ -9,9 +9,9 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
 @Singleton
-public final class TodoCreatedAggregateRootEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoCreated> {
+public final class TodoCreatedAggregateRootEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoCreatedEvent> {
     @Override
-    public SerializedEventPayload serialize(final TodoCreated selfAggregateRootEventPayload) {
+    public SerializedEventPayload serialize(final TodoCreatedEvent selfAggregateRootEventPayload) {
         final String event = Json.createObjectBuilder()
                 .add(TodoAggregateRoot.DESCRIPTION, selfAggregateRootEventPayload.description())
                 .build()
@@ -20,9 +20,9 @@ public final class TodoCreatedAggregateRootEventPayloadSerde implements Aggregat
     }
 
     @Override
-    public TodoCreated deserialize(final SerializedEventPayload serializedEventPayload) {
+    public TodoCreatedEvent deserialize(final SerializedEventPayload serializedEventPayload) {
         final JsonObject jsonObject = Json.createReader(serializedEventPayload.reader()).readObject();
-        return new TodoCreated(
+        return new TodoCreatedEvent(
                 jsonObject.getString(TodoAggregateRoot.DESCRIPTION));
     }
 }

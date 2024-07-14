@@ -7,9 +7,9 @@ import jakarta.inject.Singleton;
 import jakarta.json.Json;
 
 @Singleton
-public final class TodoMarkedAsCompletedAggregateRootEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoMarkedAsCompleted> {
+public final class TodoMarkedAsCompletedAggregateRootEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoMarkedAsCompletedEvent> {
     @Override
-    public SerializedEventPayload serialize(final TodoMarkedAsCompleted selfAggregateRootEventPayload) {
+    public SerializedEventPayload serialize(final TodoMarkedAsCompletedEvent selfAggregateRootEventPayload) {
         final String event = Json.createObjectBuilder()
                 .build()
                 .toString();
@@ -17,8 +17,8 @@ public final class TodoMarkedAsCompletedAggregateRootEventPayloadSerde implement
     }
 
     @Override
-    public TodoMarkedAsCompleted deserialize(final SerializedEventPayload serializedEventPayload) {
-        return new TodoMarkedAsCompleted();
+    public TodoMarkedAsCompletedEvent deserialize(final SerializedEventPayload serializedEventPayload) {
+        return new TodoMarkedAsCompletedEvent();
     }
 
     @Override
@@ -27,7 +27,7 @@ public final class TodoMarkedAsCompletedAggregateRootEventPayloadSerde implement
     }
 
     @Override
-    public Class<TodoMarkedAsCompleted> aggregateRootEventPayloadClass() {
-        return TodoMarkedAsCompleted.class;
+    public Class<TodoMarkedAsCompletedEvent> aggregateRootEventPayloadClass() {
+        return TodoMarkedAsCompletedEvent.class;
     }
 }

@@ -17,7 +17,7 @@ public class BizFlowExtSerdeCodeEnhancementTest {
                             .addClass(TodoAggregateRoot.class)
                             .addClass(TodoId.class)
                             .addClass(TodoStatus.class)
-                            .addClass(TodoCreated.class)
+                            .addClass(TodoCreatedEvent.class)
                             .addClass(TodoCreatedAggregateRootEventPayloadSerdeEnhanced.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql"));
@@ -34,6 +34,6 @@ public class BizFlowExtSerdeCodeEnhancementTest {
     @Test
     public void shouldReturnAggregateRootEventPayloadClass() {
         assertThat(todoCreatedAggregateRootEventPayloadSerdeEnhanced.aggregateRootEventPayloadClass())
-                .isEqualTo(TodoCreated.class);
+                .isEqualTo(TodoCreatedEvent.class);
     }
 }

@@ -7,12 +7,11 @@ import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.BaseOnSavedEvent;
 import io.bizflowframework.biz.flow.ext.test.TodoAggregateRoot;
 import io.bizflowframework.biz.flow.ext.test.TodoId;
 import io.bizflowframework.biz.flow.ext.test.TodoStatus;
-import io.bizflowframework.biz.flow.ext.test.event.TodoCreated;
-import jakarta.inject.Singleton;
+import io.bizflowframework.biz.flow.ext.test.event.TodoCreatedEvent;
 
 import java.util.Objects;
 
-public final class HandleTodoCreatedEvent extends BaseOnSavedEvent<TodoId, TodoAggregateRoot, TodoCreated> {
+public final class HandleTodoCreatedEvent extends BaseOnSavedEvent<TodoId, TodoAggregateRoot, TodoCreatedEvent> {
     private final QueryService queryService;
 
     public HandleTodoCreatedEvent(final QueryService queryService) {
@@ -23,7 +22,7 @@ public final class HandleTodoCreatedEvent extends BaseOnSavedEvent<TodoId, TodoA
     public void execute(final AggregateRootIdentifier<TodoId> aggregateRootIdentifier,
                         final AggregateVersion aggregateVersion,
                         final CreatedAt createdAt,
-                        final TodoCreated payload) {
+                        final TodoCreatedEvent payload) {
         this.queryService.store(new QueryEntity(aggregateRootIdentifier.aggregateId(),
                 payload.description(),
                 TodoStatus.IN_PROGRESS,

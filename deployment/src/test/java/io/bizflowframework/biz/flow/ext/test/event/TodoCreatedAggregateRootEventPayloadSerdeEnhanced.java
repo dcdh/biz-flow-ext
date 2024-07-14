@@ -8,9 +8,9 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
 @Singleton
-public final class TodoCreatedAggregateRootEventPayloadSerdeEnhanced implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoCreated> {
+public final class TodoCreatedAggregateRootEventPayloadSerdeEnhanced implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoCreatedEvent> {
     @Override
-    public SerializedEventPayload serialize(final TodoCreated selfAggregateRootEventPayload) {
+    public SerializedEventPayload serialize(final TodoCreatedEvent selfAggregateRootEventPayload) {
         final String event = Json.createObjectBuilder()
                 .add(TodoAggregateRoot.DESCRIPTION, selfAggregateRootEventPayload.description())
                 .build()
@@ -19,9 +19,9 @@ public final class TodoCreatedAggregateRootEventPayloadSerdeEnhanced implements 
     }
 
     @Override
-    public TodoCreated deserialize(final SerializedEventPayload serializedEventPayload) {
+    public TodoCreatedEvent deserialize(final SerializedEventPayload serializedEventPayload) {
         final JsonObject jsonObject = Json.createReader(serializedEventPayload.reader()).readObject();
-        return new TodoCreated(
+        return new TodoCreatedEvent(
                 jsonObject.getString(TodoAggregateRoot.DESCRIPTION));
     }
 }
