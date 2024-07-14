@@ -5,17 +5,17 @@ import org.jboss.jandex.ParameterizedType;
 
 import java.util.function.Function;
 
-public record ExtractAggregateRootEventPayloadKeyFromPayload() implements Function<ExtractedInterfaceParameterizedType, AggregateRootEventPayloadKey> {
+public record ExtractAggregateRootEventPayloadDescriptor() implements Function<ExtractedInterfaceParameterizedType, AggregateRootEventPayloadDescriptor> {
 
     @Override
-    public AggregateRootEventPayloadKey apply(final ExtractedInterfaceParameterizedType extractedInterfaceParameterizedType) {
-        final ClassInfo implementor = extractedInterfaceParameterizedType.implementor();
-        final ParameterizedType parameterizedType = extractedInterfaceParameterizedType.parameterizedType();
+    public AggregateRootEventPayloadDescriptor apply(final ExtractedInterfaceParameterizedType extract) {
+        final ClassInfo implementor = extract.implementor();
+        final ParameterizedType parameterizedType = extract.parameterizedType();
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
             final Class<?> aggregateRootClass = classLoader.loadClass(parameterizedType.arguments().getFirst().name().toString());
             final Class<?> eventPayloadClassName = classLoader.loadClass(implementor.name().toString());
-            return new AggregateRootEventPayloadKey(aggregateRootClass, eventPayloadClassName);
+            return new AggregateRootEventPayloadDescriptor(aggregateRootClass, eventPayloadClassName);
         } catch (final ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

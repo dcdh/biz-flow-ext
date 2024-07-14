@@ -5,18 +5,21 @@ import org.jboss.jandex.ParameterizedType;
 import java.util.List;
 import java.util.function.Function;
 
-public record ExtractAggregateRootEventPayloadKeyFromSerde() implements Function<ExtractedInterfaceParameterizedType, AggregateRootEventPayloadKey> {
+public record ExtractAggregateRootEventPayloadSerdeDescriptor()
+        implements Function<ExtractedInterfaceParameterizedType, AggregateRootEventPayloadSerdeDescriptor> {
 
     @Override
-    public AggregateRootEventPayloadKey apply(final ExtractedInterfaceParameterizedType extractedInterfaceParameterizedType) {
-        final ParameterizedType parameterizedType = extractedInterfaceParameterizedType.parameterizedType();
+    public AggregateRootEventPayloadSerdeDescriptor apply(final ExtractedInterfaceParameterizedType extracted) {
+        final ParameterizedType parameterizedType = extracted.parameterizedType();
         final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
         assert arguments.size() == 2;
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
+            final Class<?> aggregateRootEventPayloadSerde = classLoader.loadClass(extracted.implementor().name().toString());
             final Class<?> aggregateRootClass = classLoader.loadClass(arguments.getFirst().name().toString());
             final Class<?> aggregateRootEventPayloadClass = classLoader.loadClass(arguments.get(1).name().toString());
-            return new AggregateRootEventPayloadKey(aggregateRootClass, aggregateRootEventPayloadClass);
+            return new AggregateRootEventPayloadSerdeDescriptor(aggregateRootEventPayloadSerde, aggregateRootClass,
+                    aggregateRootEventPayloadClass);
         } catch (final ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
