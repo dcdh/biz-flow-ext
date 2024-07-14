@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ShouldFailWhenBizQueryUseCaseNamingConventionIsNotRespectedTest {
-// FCK ko
+
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
             .withApplicationRoot(jar -> jar

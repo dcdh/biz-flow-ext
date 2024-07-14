@@ -18,7 +18,10 @@ import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.EventReposit
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.PostgresqlInitializer;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.incrementer.DefaultAggregateVersionIncrementer;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.AggregateRootEventPayloadSerde;
-import io.bizflowframework.biz.flow.ext.runtime.usecase.*;
+import io.bizflowframework.biz.flow.ext.runtime.usecase.BizMutationUseCase;
+import io.bizflowframework.biz.flow.ext.runtime.usecase.BizQueryUseCase;
+import io.bizflowframework.biz.flow.ext.runtime.usecase.CommandRequest;
+import io.bizflowframework.biz.flow.ext.runtime.usecase.QueryRequest;
 import io.quarkus.arc.DefaultBean;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
@@ -35,7 +38,6 @@ import io.quarkus.resteasy.reactive.spi.CustomExceptionMapperBuildItem;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Singleton;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.MethodInfo;
 import org.jboss.logging.Logger;
 import org.objectweb.asm.Opcodes;
 
@@ -51,10 +53,6 @@ class BizFlowExtProcessor {
 
     private static final String FEATURE = "biz-flow-ext";
 
-    private static final String BIZ_MUTATION_USE_CASE_SIMPLE_NAME = BizMutationUseCase.class.getSimpleName();
-
-    private static final String BIZ_QUERY_USE_CASE_SIMPLE_NAME = BizQueryUseCase.class.getSimpleName();
-
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
@@ -65,10 +63,10 @@ class BizFlowExtProcessor {
                                                final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(AggregateRootEventPayloadSerde.class)
-                .forEach(classInfo ->
+                .forEach(implementor ->
                         bytecodeTransformerBuildItemProducer.produce(
                                 new BytecodeTransformerBuildItem.Builder()
-                                        .setClassToTransform(classInfo.name().toString())
+                                        .setClassToTransform(implementor.name().toString())
                                         .setVisitorFunction((s, classVisitor) ->
                                                 new AggregateRootEventPayloadSerdeClassVisitor(classVisitor))
                                         .setCacheable(true)
@@ -83,9 +81,8 @@ class BizFlowExtProcessor {
         final List<AggregateRootEventPayloadKey> aggregateRootEventPayloadKeys = applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(AggregateRootEventPayload.class)
                 .stream()
-                .map(classInfo -> new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayload.class)
-                        .andThen(new ExtractAggregateRootEventPayloadKeyFromPayload(classInfo))
-                        .apply(classInfo))
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayload.class))
+                .map(new ExtractAggregateRootEventPayloadKeyFromPayload())
                 .toList();
         // Next get all serde implementations
         final List<AggregateRootEventPayloadKey> aggregateRootEventPayloadSerdeKeys = applicationIndexBuildItem.getIndex()
@@ -112,13 +109,13 @@ class BizFlowExtProcessor {
                 .getAllKnownImplementors(AggregateRootEventPayloadSerde.class)
                 .stream()
                 .collect(Collectors.groupingBy(
-                        classInfo -> new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayloadSerde.class)
+                        new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayloadSerde.class)
                                 .andThen(new ExtractAggregateRootEventPayloadKeyFromSerde())
-                                .apply(classInfo)));
+                ));
         serdeImplementationsByAggregateRootAndEventPayload
-                .forEach((key, classInfos) -> {
-                    if (classInfos.size() > 1) {
-                        final String implementations = classInfos.stream().map(classInfo -> classInfo.name().toString())
+                .forEach((key, implementors) -> {
+                    if (implementors.size() > 1) {
+                        final String implementations = implementors.stream().map(implementor -> implementor.name().toString())
                                 .sorted()
                                 .collect(Collectors.joining(", "));
                         validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
@@ -134,10 +131,10 @@ class BizFlowExtProcessor {
                                             final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownSubclasses(BaseAggregateRootRepository.class)
-                .forEach(classInfo ->
+                .forEach(implementor ->
                         bytecodeTransformerBuildItemProducer.produce(
                                 new BytecodeTransformerBuildItem.Builder()
-                                        .setClassToTransform(classInfo.name().toString())
+                                        .setClassToTransform(implementor.name().toString())
                                         .setVisitorFunction((s, classVisitor) ->
                                                 new BaseAggregateRootRepositoryClassVisitor(classVisitor))
                                         .setCacheable(true)
@@ -150,53 +147,50 @@ class BizFlowExtProcessor {
                                              final BuildProducer<GeneratedBeanBuildItem> generatedBeanBuildItemBuildProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownSubclasses(AggregateRoot.class)
-                .forEach(classInfo ->
-                        new ExtractAggregateRootTypesFromAggregateRoot()
-                                .andThen(aggregateRootTypes -> {
-                                    final Class<?> aggregateRootClass = aggregateRootTypes.aggregateRootClass();
-                                    final Class<?> aggregateIdClass = aggregateRootTypes.aggregateIdClass();
-                                    try (final ClassCreator beanClassCreator = ClassCreator.builder()
-                                            .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer))
-                                            .className(classInfo.name() + "RepositoryGenerated")
-                                            .signature(SignatureBuilder.forClass()
-                                                    .setSuperClass(
-                                                            Type.parameterizedType(
-                                                                    Type.classType(BaseAggregateRootRepository.class),
-                                                                    Type.classType(aggregateIdClass),
-                                                                    Type.classType(aggregateRootClass))))
-                                            .setFinal(false)
-                                            .build()) {
-                                        beanClassCreator.addAnnotation(Singleton.class);
-                                        beanClassCreator.addAnnotation(DefaultBean.class);
+                .stream()
+                .map(new ExtractAggregateRootTypesFromAggregateRoot())
+                .forEach(aggregateRootTypes -> {
+                    final Class<?> aggregateRootClass = aggregateRootTypes.aggregateRootClass();
+                    final Class<?> aggregateIdClass = aggregateRootTypes.aggregateIdClass();
+                    try (final ClassCreator beanClassCreator = ClassCreator.builder()
+                            .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer))
+                            .className(aggregateRootTypes.aggregateRootClass().getName() + "RepositoryGenerated")
+                            .signature(SignatureBuilder.forClass()
+                                    .setSuperClass(
+                                            Type.parameterizedType(
+                                                    Type.classType(BaseAggregateRootRepository.class),
+                                                    Type.classType(aggregateIdClass),
+                                                    Type.classType(aggregateRootClass))))
+                            .setFinal(false)
+                            .build()) {
+                        beanClassCreator.addAnnotation(Singleton.class);
+                        beanClassCreator.addAnnotation(DefaultBean.class);
 
-                                        // constructor
-                                        final MethodCreator constructor = beanClassCreator.getMethodCreator(MethodDescriptor.INIT, void.class,
-                                                EventRepository.class, AggregateRootInstanceCreator.class, Instance.class);
-                                        constructor.setSignature(
-                                                SignatureBuilder.forMethod()
-                                                        .addParameterType(Type.parameterizedType(Type.classType(EventRepository.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass)))
-                                                        .addParameterType(Type.classType(AggregateRootInstanceCreator.class))
-                                                        .addParameterType(Type.parameterizedType(Type.classType(Instance.class),
-                                                                Type.parameterizedType(Type.classType(BaseOnSavedEvent.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass),
-                                                                        Type.wildcardTypeWithUpperBound(Type.parameterizedType(Type.classType(AggregateRootEventPayload.class), Type.classType(aggregateRootClass))))))
-                                                        .setReturnType(Type.voidType())
-                                                        .build());
-                                        constructor.setModifiers(Modifier.PUBLIC);
-                                        constructor.invokeSpecialMethod(MethodDescriptor.ofConstructor(BaseAggregateRootRepository.class,
-                                                        EventRepository.class, AggregateRootInstanceCreator.class, Instance.class),
-                                                constructor.getThis(), constructor.getMethodParam(0), constructor.getMethodParam(1), constructor.getMethodParam(2));
-                                        constructor.returnVoid();
+                        // constructor
+                        final MethodCreator constructor = beanClassCreator.getMethodCreator(MethodDescriptor.INIT, void.class,
+                                EventRepository.class, AggregateRootInstanceCreator.class, Instance.class);
+                        constructor.setSignature(
+                                SignatureBuilder.forMethod()
+                                        .addParameterType(Type.parameterizedType(Type.classType(EventRepository.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass)))
+                                        .addParameterType(Type.classType(AggregateRootInstanceCreator.class))
+                                        .addParameterType(Type.parameterizedType(Type.classType(Instance.class),
+                                                Type.parameterizedType(Type.classType(BaseOnSavedEvent.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass),
+                                                        Type.wildcardTypeWithUpperBound(Type.parameterizedType(Type.classType(AggregateRootEventPayload.class), Type.classType(aggregateRootClass))))))
+                                        .setReturnType(Type.voidType())
+                                        .build());
+                        constructor.setModifiers(Modifier.PUBLIC);
+                        constructor.invokeSpecialMethod(MethodDescriptor.ofConstructor(BaseAggregateRootRepository.class,
+                                        EventRepository.class, AggregateRootInstanceCreator.class, Instance.class),
+                                constructor.getThis(), constructor.getMethodParam(0), constructor.getMethodParam(1), constructor.getMethodParam(2));
+                        constructor.returnVoid();
 
-                                        // clazz
-                                        final MethodCreator clazzMethod = beanClassCreator.getMethodCreator(
-                                                BaseAggregateRootRepositoryClassVisitor.AGGREGATE_ROOT_CLASS_METHOD_NAMING, Class.class);
-                                        clazzMethod.setModifiers(Opcodes.ACC_PROTECTED);
-                                        clazzMethod.returnValue(clazzMethod.loadClass(aggregateRootClass));
-                                    }
-                                    return null;
-                                })
-                                .apply(classInfo)
-                );
+                        // clazz
+                        final MethodCreator clazzMethod = beanClassCreator.getMethodCreator(
+                                BaseAggregateRootRepositoryClassVisitor.AGGREGATE_ROOT_CLASS_METHOD_NAMING, Class.class);
+                        clazzMethod.setModifiers(Opcodes.ACC_PROTECTED);
+                        clazzMethod.returnValue(clazzMethod.loadClass(aggregateRootClass));
+                    }
+                });
     }
 
     @BuildStep
@@ -220,51 +214,48 @@ class BizFlowExtProcessor {
                                                    final BuildProducer<GeneratedBeanBuildItem> generatedBeanBuildItemBuildProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownSubclasses(AggregateRoot.class)
-                .forEach(classInfo ->
-                        new ExtractAggregateRootTypesFromAggregateRoot()
-                                .andThen(aggregateRootTypes -> {
-                                    final Class<?> aggregateRootClass = aggregateRootTypes.aggregateRootClass();
-                                    final Class<?> aggregateIdClass = aggregateRootTypes.aggregateIdClass();
-                                    try (final ClassCreator beanClassCreator = ClassCreator.builder()
-                                            .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer))
-                                            .className(classInfo.name() + "JdbcPostgresqlEventRepositoryGenerated")
-                                            .signature(SignatureBuilder.forClass()
-                                                    .setSuperClass(
-                                                            Type.parameterizedType(
-                                                                    Type.classType(BaseJdbcPostgresqlEventRepository.class),
-                                                                    Type.classType(aggregateIdClass),
-                                                                    Type.classType(aggregateRootClass)))
-                                            )
-                                            .setFinal(false)
-                                            .build()) {
-                                        beanClassCreator.addAnnotation(Singleton.class);
-                                        beanClassCreator.addAnnotation(DefaultBean.class);
+                .stream()
+                .map(new ExtractAggregateRootTypesFromAggregateRoot())
+                .forEach(aggregateRootTypes -> {
+                    final Class<?> aggregateRootClass = aggregateRootTypes.aggregateRootClass();
+                    final Class<?> aggregateIdClass = aggregateRootTypes.aggregateIdClass();
+                    try (final ClassCreator beanClassCreator = ClassCreator.builder()
+                            .classOutput(new GeneratedBeanGizmoAdaptor(generatedBeanBuildItemBuildProducer))
+                            .className(aggregateRootTypes.aggregateRootClass().getName() + "JdbcPostgresqlEventRepositoryGenerated")
+                            .signature(SignatureBuilder.forClass()
+                                    .setSuperClass(
+                                            Type.parameterizedType(
+                                                    Type.classType(BaseJdbcPostgresqlEventRepository.class),
+                                                    Type.classType(aggregateIdClass),
+                                                    Type.classType(aggregateRootClass)))
+                            )
+                            .setFinal(false)
+                            .build()) {
+                        beanClassCreator.addAnnotation(Singleton.class);
+                        beanClassCreator.addAnnotation(DefaultBean.class);
 
-                                        // constructor
-                                        final MethodCreator constructor = beanClassCreator.getMethodCreator(MethodDescriptor.INIT, void.class,
-                                                AgroalDataSource.class, AggregateIdInstanceCreator.class, Instance.class);
-                                        constructor.setSignature(
-                                                SignatureBuilder.forMethod()
-                                                        .addParameterType(Type.classType(AgroalDataSource.class))
-                                                        .addParameterType(Type.classType(AggregateIdInstanceCreator.class))
-                                                        .addParameterType(Type.parameterizedType(Type.classType(Instance.class), Type.parameterizedType(Type.classType(AggregateRootEventPayloadSerde.class), Type.classType(aggregateRootClass), Type.wildcardTypeUnbounded())))
-                                                        .setReturnType(Type.voidType())
-                                                        .build());
-                                        constructor.setModifiers(Modifier.PUBLIC);
-                                        constructor.invokeSpecialMethod(MethodDescriptor.ofConstructor(BaseJdbcPostgresqlEventRepository.class, AgroalDataSource.class, AggregateIdInstanceCreator.class, Instance.class),
-                                                constructor.getThis(), constructor.getMethodParam(0), constructor.getMethodParam(1), constructor.getMethodParam(2));
-                                        constructor.returnVoid();
+                        // constructor
+                        final MethodCreator constructor = beanClassCreator.getMethodCreator(MethodDescriptor.INIT, void.class,
+                                AgroalDataSource.class, AggregateIdInstanceCreator.class, Instance.class);
+                        constructor.setSignature(
+                                SignatureBuilder.forMethod()
+                                        .addParameterType(Type.classType(AgroalDataSource.class))
+                                        .addParameterType(Type.classType(AggregateIdInstanceCreator.class))
+                                        .addParameterType(Type.parameterizedType(Type.classType(Instance.class), Type.parameterizedType(Type.classType(AggregateRootEventPayloadSerde.class), Type.classType(aggregateRootClass), Type.wildcardTypeUnbounded())))
+                                        .setReturnType(Type.voidType())
+                                        .build());
+                        constructor.setModifiers(Modifier.PUBLIC);
+                        constructor.invokeSpecialMethod(MethodDescriptor.ofConstructor(BaseJdbcPostgresqlEventRepository.class, AgroalDataSource.class, AggregateIdInstanceCreator.class, Instance.class),
+                                constructor.getThis(), constructor.getMethodParam(0), constructor.getMethodParam(1), constructor.getMethodParam(2));
+                        constructor.returnVoid();
 
-                                        // clazz
-                                        final MethodCreator clazzMethod = beanClassCreator.getMethodCreator(
-                                                BaseJdbcPostgresqlEventRepositoryClassVisitor.AGGREGATE_ROOT_ID_CLASS_METHOD_NAMING, Class.class);
-                                        clazzMethod.setModifiers(Opcodes.ACC_PROTECTED);
-                                        clazzMethod.returnValue(clazzMethod.loadClass(aggregateIdClass));
-                                    }
-                                    return null;
-                                })
-                                .apply(classInfo)
-                );
+                        // clazz
+                        final MethodCreator clazzMethod = beanClassCreator.getMethodCreator(
+                                BaseJdbcPostgresqlEventRepositoryClassVisitor.AGGREGATE_ROOT_ID_CLASS_METHOD_NAMING, Class.class);
+                        clazzMethod.setModifiers(Opcodes.ACC_PROTECTED);
+                        clazzMethod.returnValue(clazzMethod.loadClass(aggregateIdClass));
+                    }
+                });
     }
 
     @BuildStep
@@ -380,6 +371,7 @@ class BizFlowExtProcessor {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(AggregateCommandRequest.class)
+                // TODO validate TypeAssignable
                 .forEach(classInfo -> {
                     try {
                         final Class<?> aggregateCommandRequest = classLoader.loadClass(classInfo.name().toString());
@@ -443,41 +435,42 @@ class BizFlowExtProcessor {
         final Collection<ClassInfo> allBizMutationUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(BizMutationUseCase.class);
         final Collection<ClassInfo> allBizQueryUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(BizQueryUseCase.class);
 
-        Stream.concat(allBizMutationUseCaseImplementors.stream(),
-                        allBizQueryUseCaseImplementors.stream())
-                .forEach(classInfo ->
-                        new ExtractInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class, BizQueryUseCase.class)
-                                .andThen(parameterizedType -> {
-                                    final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
-                                    assert arguments.size() == 3;
-                                    final MethodInfo execute = classInfo.method("execute", arguments.get(1));
-                                    final String expectedExceptionNaming = classInfo.simpleName() + "Exception";
-                                    if (execute.exceptions().size() > 1) {
-                                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                                new IllegalStateException(String.format("'%s' execute method must define only one exception called '%s'", classInfo.name(), expectedExceptionNaming))
-                                        ));
-                                    } else {
-                                        if (classInfo.simpleName().endsWith(BIZ_MUTATION_USE_CASE_SIMPLE_NAME)
-                                                || classInfo.simpleName().endsWith(BIZ_QUERY_USE_CASE_SIMPLE_NAME)) {
-                                            new ExtractClassNaming()
-                                                    .andThen(exceptionNaming -> {
-                                                        if (!expectedExceptionNaming.equals(exceptionNaming)) {
-                                                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                                                    new IllegalStateException(String.format("'%s' execute method must define an exception called '%s' got '%s'", classInfo.name(),
-                                                                            expectedExceptionNaming, exceptionNaming))
-                                                            ));
-                                                        }
-                                                        return null;
-                                                    })
-                                                    .apply(execute.exceptions().getFirst());
-                                        } else {
-                                            LOGGER.warnf("Unable to validate exception naming for '%s' because the use case is bad named to check it. Use case naming will fail via 'validateBizMutationUseCaseNaming' or 'validateBizQueryUseCaseNaming' build steps.",
-                                                    classInfo.simpleName());
-                                        }
-                                    }
-                                    return null;
-                                })
-                                .apply(classInfo)
+        Stream.concat(allBizMutationUseCaseImplementors.stream(), allBizQueryUseCaseImplementors.stream())
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class, BizQueryUseCase.class))
+                .map(UseCaseExceptionNamingValidator::new)
+                .filter(UseCaseExceptionNamingValidator::hasOnlyOneExceptionDefined)
+                .filter(validator -> {
+                    if (validator.isUseCaseWellDefined()) {
+                        return validator.isInvalid();
+                    } else {
+                        LOGGER.warnf("Unable to validate exception naming for '%s' because the use case is bad named to check it. Use case naming will fail via 'validateBizMutationUseCaseNaming' or 'validateBizQueryUseCaseNaming' build steps.",
+                                validator.implementorSimpleName());
+                        return false;
+                    }
+                })
+                .forEach(invalid ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("'%s' execute method must define an exception called '%s' got '%s'",
+                                        invalid.implementorName(),
+                                        invalid.expectedExceptionNaming(), invalid.exceptionNaming()))
+                        ))
+                );
+    }
+
+    @BuildStep
+    void validateUseCaseHasOnlyOneException(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                            final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Collection<ClassInfo> allBizMutationUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(BizMutationUseCase.class);
+        final Collection<ClassInfo> allBizQueryUseCaseImplementors = applicationIndexBuildItem.getIndex().getAllKnownImplementors(BizQueryUseCase.class);
+
+        Stream.concat(allBizMutationUseCaseImplementors.stream(), allBizQueryUseCaseImplementors.stream())
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class, BizQueryUseCase.class))
+                .map(UseCaseOnlyOneExceptionValidator::new)
+                .filter(UseCaseOnlyOneExceptionValidator::isInvalid)
+                .forEach(invalid ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("'%s' execute method must define only one exception called '%s'", invalid.implementorNaming(), invalid.expectedExceptionNaming()))
+                        ))
                 );
     }
 
@@ -487,14 +480,14 @@ class BizFlowExtProcessor {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizMutationUseCase.class)
                 .stream()
-                .map(ClassInfo::simpleName)
-                .filter(bizQueryUseCaseSimpleName -> !bizQueryUseCaseSimpleName.endsWith(BIZ_MUTATION_USE_CASE_SIMPLE_NAME))
-                .forEach(badNamingBizQueryUseCaseSimpleName -> {
-                    validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                            new IllegalStateException(String.format("Bad naming for '%s', must end with '%s'",
-                                    badNamingBizQueryUseCaseSimpleName, BIZ_MUTATION_USE_CASE_SIMPLE_NAME))
-                    ));
-                });
+                .map(classInfo -> new UseCaseNamingValidator(classInfo, BizMutationUseCase.class))
+                .filter(UseCaseNamingValidator::isInvalid)
+                .forEach(validator ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("Bad naming for '%s', must end with '%s'",
+                                        validator.implementorSimpleName(), validator.mustEndWith()))
+                        ))
+                );
     }
 
     @BuildStep
@@ -502,62 +495,37 @@ class BizFlowExtProcessor {
                                                   final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizMutationUseCase.class)
-                .forEach(classInfo ->
-                        new ExtractInterfaceParameterizedTypeFromClassInfo(BizMutationUseCase.class)
-                                .andThen(parameterizedType -> {
-                                    final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
-                                    assert arguments.size() == 3;
-                                    final int indexOfBizMutationUseCase = classInfo.simpleName().indexOf(BIZ_MUTATION_USE_CASE_SIMPLE_NAME);
-                                    if (indexOfBizMutationUseCase > -1) {
-                                        final String expectedNaming = classInfo.simpleName().substring(0, indexOfBizMutationUseCase) + "CommandRequest";
-                                        new ExtractClassNaming()
-                                                .andThen(currentNaming -> {
-                                                    if (!expectedNaming.equals(currentNaming)) {
-                                                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                                                new IllegalStateException(String.format("Bad naming for command request '%s', expected '%s'",
-                                                                        currentNaming, expectedNaming))
-                                                        ));
-                                                    }
-                                                    return null;
-                                                })
-                                                .apply(arguments.get(1));
-                                    } else {
-                                        LOGGER.warnf("Unable to validate command request naming for '%s' because the use case is bad named to validate it. Use case naming will fail via 'validateBizMutationUseCaseNaming' build step.",
-                                                classInfo.simpleName());
-                                    }
-                                    return null;
-                                })
-                                .apply(classInfo)
-                );
+                .stream()
+                .map(BizMutationUseCaseRequestCommandValidator::new)
+                .filter(validator -> {
+                    if (validator.canValidate()) {
+                        return validator.isInvalid();
+                    } else {
+                        LOGGER.warnf("Unable to validate command request naming for '%s' because the use case is bad named to validate it. Use case naming will fail via 'validateBizMutationUseCaseNaming' build step.",
+                                validator.useCaseNaming());
+                        return false;
+                    }
+                })
+                .forEach(validator ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("Bad naming for command request '%s', expected '%s'",
+                                        validator.commandRequestCurrentNaming(), validator.commandRequestExpectedNaming()))
+                        )));
     }
 
     @BuildStep
-    void validateBizQueryProjectionType(final ApplicationIndexBuildItem applicationIndexBuildItem,
-                                        final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    void validateBizQueryUseCaseProjectionType(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                               final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizQueryUseCase.class)
-                .forEach(classInfo ->
-                        new ExtractInterfaceParameterizedTypeFromClassInfo(BizQueryUseCase.class)
-                                .andThen(parameterizedType -> {
-                                    try {
-                                        final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
-                                        assert arguments.size() == 3;
-                                        final org.jboss.jandex.Type projectionType = arguments.getFirst();
-                                        final Class<?> projectionClass = classLoader.loadClass(projectionType.name().toString());
-
-                                        if (!VersionedProjection.class.isAssignableFrom(projectionClass)
-                                                && !ListOfProjection.class.isAssignableFrom(projectionClass)) {
-                                            validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                                    new IllegalStateException(String.format("BizQueryUseCase '%s' projection must implement VersionedProjection or be a ListOfProjection", classInfo.name()))
-                                            ));
-                                        }
-                                        return null;
-                                    } catch (final ClassNotFoundException classNotFoundException) {
-                                        throw new IllegalStateException("Should not be here");
-                                    }
-                                })
-                                .apply(classInfo)
+                .stream()
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(BizQueryUseCase.class))
+                .map(BizQueryUseCaseProjectionTypeValidator::new)// FCK je devrais avoir un autre nommage qui prennent les classes assignable en entrée ...
+                .filter(BizQueryUseCaseProjectionTypeValidator::isInvalid)
+                .forEach(invalid ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("BizQueryUseCase '%s' projection must implement VersionedProjection or be a ListOfProjection", invalid.implementorNaming()))
+                        ))
                 );
     }
 
@@ -567,14 +535,14 @@ class BizFlowExtProcessor {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizQueryUseCase.class)
                 .stream()
-                .map(ClassInfo::simpleName)
-                .filter(bizQueryUseCaseSimpleName -> !bizQueryUseCaseSimpleName.endsWith(BIZ_QUERY_USE_CASE_SIMPLE_NAME))
-                .forEach(badNamingBizQueryUseCaseSimpleName -> {
-                    validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                            new IllegalStateException(String.format("Bad naming for '%s', must end with '%s'",
-                                    badNamingBizQueryUseCaseSimpleName, BIZ_QUERY_USE_CASE_SIMPLE_NAME))
-                    ));
-                });
+                .map(implementor -> new UseCaseNamingValidator(implementor, BizQueryUseCase.class))
+                .filter(UseCaseNamingValidator::isInvalid)
+                .forEach(validator ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("Bad naming for '%s', must end with '%s'",
+                                        validator.implementorSimpleName(), validator.mustEndWith()))
+                        ))
+                );
     }
 
     @BuildStep
@@ -582,33 +550,22 @@ class BizFlowExtProcessor {
                                                final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizQueryUseCase.class)
-                .forEach(classInfo ->
-                        new ExtractInterfaceParameterizedTypeFromClassInfo(BizQueryUseCase.class)
-                                .andThen(parameterizedType -> {
-                                    final List<org.jboss.jandex.Type> arguments = parameterizedType.arguments();
-                                    assert arguments.size() == 3;
-                                    final int indexOfBizQueryUseCase = classInfo.simpleName().indexOf(BIZ_QUERY_USE_CASE_SIMPLE_NAME);
-                                    if (indexOfBizQueryUseCase > -1) {
-                                        final String expectedNaming = classInfo.simpleName().substring(0, indexOfBizQueryUseCase) + "QueryRequest";
-                                        new ExtractClassNaming()
-                                                .andThen(currentNaming -> {
-                                                    if (!expectedNaming.equals(currentNaming)) {
-                                                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
-                                                                new IllegalStateException(String.format("Bad naming for query request '%s', expected '%s'",
-                                                                        currentNaming, expectedNaming))
-                                                        ));
-                                                    }
-                                                    return null;
-                                                })
-                                                .apply(arguments.get(1));
-                                    } else {
-                                        LOGGER.warnf("Unable to validate query request naming for '%s' because the use case is bad named to validate it. Use case naming will fail via 'validateBizQueryUseCaseNaming' build step.",
-                                                classInfo.simpleName());
-                                    }
-                                    return null;
-                                })
-                                .apply(classInfo)
-                );
+                .stream()
+                .map(BizQueryUseCaseRequestCommandValidator::new)
+                .filter(validator -> {
+                    if (validator.canValidate()) {
+                        return validator.isInvalid();
+                    } else {
+                        LOGGER.warnf("Unable to validate query request naming for '%s' because the use case is bad named to validate it. Use case naming will fail via 'validateBizQueryUseCaseNaming' build step.",
+                                validator.useCaseNaming());
+                        return false;
+                    }
+                })
+                .forEach(validator ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("Bad naming for query request '%s', expected '%s'",
+                                        validator.queryRequestCurrentNaming(), validator.queryRequestExpectedNaming()))
+                        )));
     }
 
     @BuildStep
@@ -616,10 +573,10 @@ class BizFlowExtProcessor {
                                                     final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizMutationUseCase.class)
-                .forEach(classInfo ->
+                .forEach(implementor ->
                         additionalBeanBuildItemProducer.produce(
                                 new AdditionalBeanBuildItem.Builder()
-                                        .addBeanClasses(classInfo.name().toString())
+                                        .addBeanClasses(implementor.name().toString())
                                         .setUnremovable()
                                         .setDefaultScope(DotNames.SINGLETON)
                                         .build()
@@ -632,10 +589,10 @@ class BizFlowExtProcessor {
                                    final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizMutationUseCase.class)
-                .forEach(classInfo ->
+                .forEach(implementor ->
                         bytecodeTransformerBuildItemProducer.produce(
                                 new BytecodeTransformerBuildItem.Builder()
-                                        .setClassToTransform(classInfo.name().toString())
+                                        .setClassToTransform(implementor.name().toString())
                                         .setVisitorFunction((s, classVisitor) ->
                                                 new BizMutationUseCaseClassVisitor(classVisitor))
                                         .setCacheable(true)
@@ -648,10 +605,10 @@ class BizFlowExtProcessor {
                                                  final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizQueryUseCase.class)
-                .forEach(classInfo ->
+                .forEach(implementor ->
                         additionalBeanBuildItemProducer.produce(
                                 new AdditionalBeanBuildItem.Builder()
-                                        .addBeanClasses(classInfo.name().toString())
+                                        .addBeanClasses(implementor.name().toString())
                                         .setUnremovable()
                                         .setDefaultScope(DotNames.SINGLETON)
                                         .build()
@@ -664,10 +621,10 @@ class BizFlowExtProcessor {
                                 final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownImplementors(BizQueryUseCase.class)
-                .forEach(classInfo ->
+                .forEach(implementor ->
                         bytecodeTransformerBuildItemProducer.produce(
                                 new BytecodeTransformerBuildItem.Builder()
-                                        .setClassToTransform(classInfo.name().toString())
+                                        .setClassToTransform(implementor.name().toString())
                                         .setVisitorFunction((s, classVisitor) ->
                                                 new BizQueryUseCaseClassVisitor(classVisitor))
                                         .setCacheable(true)
