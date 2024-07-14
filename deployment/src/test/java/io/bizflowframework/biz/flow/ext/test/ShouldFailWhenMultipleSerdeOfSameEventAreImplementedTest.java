@@ -24,10 +24,7 @@ public class ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest {
                     .addAsResource("init.sql")
             )
             .assertException(throwable -> assertThat(throwable)
-                    .hasNoSuppressedExceptions()
-                    .rootCause()
-                    .hasMessage("Multiple Serde implementations found for aggregate 'io.bizflowframework.biz.flow.ext.test.TodoAggregateRoot' and event 'io.bizflowframework.biz.flow.ext.test.event.TodoCreatedEvent', only one is expected. Found implementations io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeOne, io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeTwo")
-                    .hasNoSuppressedExceptions());
+                    .hasMessageContaining("Multiple Serde implementations found for aggregate 'io.bizflowframework.biz.flow.ext.test.TodoAggregateRoot' and event 'io.bizflowframework.biz.flow.ext.test.event.TodoCreatedEvent', only one is expected. Found implementations io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeOne, io.bizflowframework.biz.flow.ext.test.ShouldFailWhenMultipleSerdeOfSameEventAreImplementedTest$TodoCreatedAggregateRootEventPayloadSerdeTwo"));
 
     @Test
     public void test() {

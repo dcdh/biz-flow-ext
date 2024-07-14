@@ -14,7 +14,7 @@ public class ShouldFailWhenEventNotARecordTest {
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
             .withApplicationRoot(jar -> jar
-                    .addClasses(TodoId.class, TodoAggregateRoot.class, InvalidTodoEvent.class, InvalidTodoEventPayloadSerde.class)
+                    .addClasses(TodoId.class, TodoAggregateRoot.class, InvalidTodoEvent.class, InvalidTodoEventSerde.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql")
             )
@@ -37,7 +37,7 @@ public class ShouldFailWhenEventNotARecordTest {
         }
     }
 
-    private static final class InvalidTodoEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, InvalidTodoEvent> {
+    private static final class InvalidTodoEventSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, InvalidTodoEvent> {
 
         @Override
         public SerializedEventPayload serialize(final InvalidTodoEvent selfAggregateRootEventPayload) {

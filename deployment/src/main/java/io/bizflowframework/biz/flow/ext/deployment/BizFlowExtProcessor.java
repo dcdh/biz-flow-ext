@@ -78,18 +78,20 @@ class BizFlowExtProcessor {
     @BuildStep
     void validateAtLeastOneSerdeIsImplementedPerAggregateRootAndAggregateRootEventPayload(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                                                           final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Class<?> aggregateRootEventPayloadClass = AggregateRootEventPayload.class;
+        final Class<?> aggregateRootEventPayloadSerdeClass = AggregateRootEventPayloadSerde.class;
         // First get all events per aggregate
         final List<AggregateRootEventPayloadDescriptor> aggregateRootEventPayloadDescriptors = applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(AggregateRootEventPayload.class)
+                .getAllKnownImplementors(aggregateRootEventPayloadClass)
                 .stream()
-                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayload.class))
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(aggregateRootEventPayloadClass))
                 .map(new ExtractAggregateRootEventPayloadDescriptor())
                 .toList();
         // Next get all serde implementations
         final List<AggregateRootEventPayloadSerdeDescriptor> aggregateRootEventPayloadSerdeDescriptors = applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(AggregateRootEventPayloadSerde.class)
+                .getAllKnownImplementors(aggregateRootEventPayloadSerdeClass)
                 .stream()
-                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayloadSerde.class))
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(aggregateRootEventPayloadSerdeClass))
                 .map(new ExtractAggregateRootEventPayloadSerdeDescriptor())
                 .toList();
         // Now check the matching
@@ -108,10 +110,11 @@ class BizFlowExtProcessor {
     @BuildStep
     void validateOnlyOneSerdeImplementationPerAggregateRootAndAggregateRootEventPayload(final ApplicationIndexBuildItem applicationIndexBuildItem,
                                                                                         final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Class<?> aggregateRootEventPayloadSerdeClass = AggregateRootEventPayloadSerde.class;
         final Map<AggregateRootEventPayloadDescriptor, List<AggregateRootEventPayloadSerdeDescriptor>> serdeImplementationsByAggregateRootEventPayloadDescriptor = applicationIndexBuildItem.getIndex()
-                .getAllKnownImplementors(AggregateRootEventPayloadSerde.class)
+                .getAllKnownImplementors(aggregateRootEventPayloadSerdeClass)
                 .stream()
-                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(AggregateRootEventPayloadSerde.class))
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(aggregateRootEventPayloadSerdeClass))
                 .map(new ExtractAggregateRootEventPayloadSerdeDescriptor())
                 .collect(Collectors.groupingBy(
                         AggregateRootEventPayloadSerdeDescriptor::toAggregateRootEventPayloadDescriptor
@@ -130,6 +133,25 @@ class BizFlowExtProcessor {
                         ));
                     }
                 });
+    }
+
+    @BuildStep
+    void validateEventSerdeNaming(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                  final BuildProducer<ValidationErrorBuildItem> validationErrorBuildItemProducer) {
+        final Class<?> aggregateRootEventPayloadSerdeClass = AggregateRootEventPayloadSerde.class;
+        applicationIndexBuildItem.getIndex()
+                .getAllKnownImplementors(aggregateRootEventPayloadSerdeClass)
+                .stream()
+                .map(new ExtractInterfaceParameterizedTypeFromClassInfo(aggregateRootEventPayloadSerdeClass))
+                .map(new ExtractAggregateRootEventPayloadSerdeDescriptor())
+                .filter(Predicate.not(new IsEventSerdeNamingValid()))
+                .forEach(invalid ->
+                        validationErrorBuildItemProducer.produce(new ValidationErrorBuildItem(
+                                new IllegalStateException(String.format("Bad naming for '%s', expected naming '%s'",
+                                        invalid.aggregateRootEventPayloadSerde().getName(),
+                                        IsEventSerdeNamingValid.expectedNaming(invalid)))
+                        ))
+                );
     }
 
     @BuildStep

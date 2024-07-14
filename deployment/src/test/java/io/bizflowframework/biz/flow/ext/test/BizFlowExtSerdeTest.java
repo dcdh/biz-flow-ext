@@ -1,7 +1,7 @@
 package io.bizflowframework.biz.flow.ext.test;
 
 import io.bizflowframework.biz.flow.ext.test.event.TodoCreatedEvent;
-import io.bizflowframework.biz.flow.ext.test.event.TodoCreatedAggregateRootEventPayloadSerde;
+import io.bizflowframework.biz.flow.ext.test.event.TodoCreatedEventSerde;
 import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -20,22 +20,22 @@ public class BizFlowExtSerdeTest {
                     .addClass(TodoId.class)
                     .addClass(TodoStatus.class)
                     .addClass(TodoCreatedEvent.class)
-                    .addClass(TodoCreatedAggregateRootEventPayloadSerde.class)
+                    .addClass(TodoCreatedEventSerde.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql"));
 
     @Inject
-    TodoCreatedAggregateRootEventPayloadSerde todoCreatedAggregateRootEventPayloadSerde;
+    TodoCreatedEventSerde todoCreatedEventSerde;
 
     @Test
     public void shouldReturnAggregateRootClass() {
-        assertThat(todoCreatedAggregateRootEventPayloadSerde.aggregateRootClass())
+        assertThat(todoCreatedEventSerde.aggregateRootClass())
                 .isEqualTo(TodoAggregateRoot.class);
     }
 
     @Test
     public void shouldReturnAggregateRootEventPayloadClass() {
-        assertThat(todoCreatedAggregateRootEventPayloadSerde.aggregateRootEventPayloadClass())
+        assertThat(todoCreatedEventSerde.aggregateRootEventPayloadClass())
                 .isEqualTo(TodoCreatedEvent.class);
     }
 }

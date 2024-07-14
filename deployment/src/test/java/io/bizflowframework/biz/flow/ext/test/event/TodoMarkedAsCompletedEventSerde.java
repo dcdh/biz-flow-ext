@@ -7,7 +7,7 @@ import jakarta.inject.Singleton;
 import jakarta.json.Json;
 
 @Singleton
-public final class TodoMarkedAsCompletedAggregateRootEventPayloadSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoMarkedAsCompletedEvent> {
+public final class TodoMarkedAsCompletedEventSerde implements AggregateRootEventPayloadSerde<TodoAggregateRoot, TodoMarkedAsCompletedEvent> {
     @Override
     public SerializedEventPayload serialize(final TodoMarkedAsCompletedEvent selfAggregateRootEventPayload) {
         final String event = Json.createObjectBuilder()
