@@ -27,6 +27,8 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.Objects;
 
 @Path("/todo")
@@ -278,6 +280,25 @@ public class TodoResourceEndpoint {
             deletePreparedStatement.execute();
         } catch (final SQLException e) {
             throw new EventStoreException(e);
+        }
+    }
+
+    @POST
+    @Path("/createOldEventWithoutSerdeNow")
+    public void createOldEventWithoutSerdeNow(@FormParam("todoId") final String todoId) {
+        try (final Connection connection = dataSource.getConnection();
+             final PreparedStatement insertFixturePreparedStatement = connection.prepareStatement(
+                     "INSERT INTO T_EVENT (aggregaterootid, aggregateroottype, version, creationdate, eventtype, eventpayload) " +
+                             "VALUES (?, ?, ?, ?, ?, to_json(?::json))")) {
+            insertFixturePreparedStatement.setString(1, todoId);
+            insertFixturePreparedStatement.setString(2, "TodoAggregateRoot");
+            insertFixturePreparedStatement.setLong(3, 1);
+            insertFixturePreparedStatement.setObject(4, LocalDateTime.now());
+            insertFixturePreparedStatement.setString(5, "OldEventWithoutSerdeNow");
+            insertFixturePreparedStatement.setString(6, "{\"description\": \"lorem ipsum dolor sit amet\"}");
+            insertFixturePreparedStatement.executeUpdate();
+        } catch (final SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 }

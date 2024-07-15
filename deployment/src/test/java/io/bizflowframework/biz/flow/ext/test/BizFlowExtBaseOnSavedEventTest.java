@@ -10,13 +10,14 @@ import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.time.LocalDateTime;
 import java.time.Month;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 public class BizFlowExtBaseOnSavedEventTest {
     @RegisterExtension
@@ -69,5 +70,22 @@ public class BizFlowExtBaseOnSavedEventTest {
                 TodoStatus.IN_PROGRESS,
                 0
         ));
+    }
+
+    @Disabled
+    @Test
+    public void shouldFailWhenSerdeDoesNotExistForEvent() {
+        // Cannot test because the validation prevent to have an event without a Serde associated
+//        // Given
+//        stubbedDefaultCreatedAtProvider.addResponse(new CreatedAt(LocalDateTime.of(1983, Month.JULY, 27, 19, 30)));
+//        final TodoAggregateRoot givenTodoAggregateRoot = new TodoAggregateRoot(new TodoId("shouldEventBeenExecuted"),
+//                stubbedDefaultCreatedAtProvider, stubbedDefaultAggregateVersionIncrementer);
+//        givenTodoAggregateRoot.createNewTodo("lorem ipsum dolor sit amet");
+//        final TodoAggregateRoot saved = todoAggregateRootRepository.save(givenTodoAggregateRoot);
+//
+//        saved.markTodoAsCompleted();
+//
+//        // When && Then
+//        assertThatThrownBy(() -> todoAggregateRootRepository.save(saved));
     }
 }

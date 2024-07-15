@@ -2,6 +2,9 @@ package io.bizflowframework.biz.flow.ext.test;
 
 import io.agroal.api.AgroalDataSource;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRootRepository;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateType;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.event.EventType;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.MissingSerdeException;
 import io.bizflowframework.biz.flow.ext.test.event.*;
 import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;
@@ -17,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class BizFlowExtAggregateRootRepositoryGenerationTest {
 
@@ -48,7 +52,7 @@ public class BizFlowExtAggregateRootRepositoryGenerationTest {
         try (final Connection connection = dataSource.getConnection();
              final PreparedStatement insertFixturePreparedStatement = connection.prepareStatement(
                      "INSERT INTO T_EVENT (aggregaterootid, aggregateroottype, version, creationdate, eventtype, eventpayload) " +
-                     "VALUES (?, ?, ?, ?, ?, to_json(?::json))")) {
+                             "VALUES (?, ?, ?, ?, ?, to_json(?::json))")) {
             insertFixturePreparedStatement.setString(1, "shouldLoadAggregateRootGenerated");
             insertFixturePreparedStatement.setString(2, "TodoAggregateRoot");
             insertFixturePreparedStatement.setLong(3, 0);
@@ -63,5 +67,30 @@ public class BizFlowExtAggregateRootRepositoryGenerationTest {
         // When && Then
         assertThatCode(() -> todoAggregateRootRepository.load(new TodoId("shouldLoadAggregateRootGenerated")))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    public void shouldFailWhenSerdeDoesNotExistForEvent() {
+        // Given
+        try (final Connection connection = dataSource.getConnection();
+             final PreparedStatement insertFixturePreparedStatement = connection.prepareStatement(
+                     "INSERT INTO T_EVENT (aggregaterootid, aggregateroottype, version, creationdate, eventtype, eventpayload) " +
+                             "VALUES (?, ?, ?, ?, ?, to_json(?::json))")) {
+            insertFixturePreparedStatement.setString(1, "shouldFailWhenSerdeDoesNotExistForEvent");
+            insertFixturePreparedStatement.setString(2, "TodoAggregateRoot");
+            insertFixturePreparedStatement.setLong(3, 0);
+            insertFixturePreparedStatement.setObject(4, LocalDateTime.of(1983, Month.JULY, 27, 19, 30));
+            insertFixturePreparedStatement.setString(5, "TodoCreatedEventBOOM");
+            insertFixturePreparedStatement.setString(6, "{\"description\": \"lorem ipsum dolor sit amet\"}");
+            insertFixturePreparedStatement.executeUpdate();
+        } catch (final SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        // When && Then
+        assertThatThrownBy(() -> todoAggregateRootRepository.load(new TodoId("shouldFailWhenSerdeDoesNotExistForEvent")))
+                .isInstanceOf(MissingSerdeException.class)
+                .hasFieldOrPropertyWithValue("aggregateType", new AggregateType(TodoAggregateRoot.class))
+                .hasFieldOrPropertyWithValue("eventType", new EventType("TodoCreatedEventBOOM"));
     }
 }

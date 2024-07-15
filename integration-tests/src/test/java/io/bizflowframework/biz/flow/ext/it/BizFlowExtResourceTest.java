@@ -187,4 +187,34 @@ public class BizFlowExtResourceTest {
                 .contentType("application/vnd.todo-already-marked-as-completed-v1+txt")
                 .body(is(String.format("Todo '%s' already marked as completed", todoId)));
     }
+
+    @Test
+    public void shouldFailWhenSerdeEventIsNoMorePresent() {
+        // Given
+        final String todoId;
+        todoId = given()
+                .formParam("description", "lorem ipsum dolor sit amet")
+                .when().post("/todo/createNewTodo")
+                .then()
+                .log().all()
+                .statusCode(200)
+                .extract().body().path("todoId");
+        Objects.requireNonNull(todoId);
+        given()
+                .formParam("todoId", todoId)
+                .when().post("/todo/createOldEventWithoutSerdeNow")
+                .then()
+                .log().all()
+                .statusCode(204);
+
+        // When && Then
+        given()
+                .formParam("todoId", todoId)
+                .when().post("/todo/markTodoAsCompleted")
+                .then()
+                .log().all()
+                .statusCode(501)
+                .contentType("application/vnd.aggregate-root-error-v1+txt")
+                .body(is("Missing Serde for aggregate root type 'TodoAggregateRoot' and event type 'OldEventWithoutSerdeNow'"));
+    }
 }

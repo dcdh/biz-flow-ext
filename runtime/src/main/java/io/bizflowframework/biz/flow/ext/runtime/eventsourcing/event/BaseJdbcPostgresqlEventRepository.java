@@ -6,6 +6,7 @@ import io.bizflowframework.biz.flow.ext.runtime.AggregateVersion;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.*;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.creational.AggregateIdInstanceCreator;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.AggregateRootEventPayloadSerde;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.MissingSerdeException;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.serde.SerializedEventPayload;
 import jakarta.enterprise.inject.Instance;
 import jakarta.transaction.Transactional;
@@ -34,7 +35,7 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
 
     @Override
     @Transactional
-    public void save(final AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> aggregateRootDomainEvent) throws EventStoreException {
+    public void save(final AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> aggregateRootDomainEvent) throws MissingSerdeException, EventStoreException {
         Objects.requireNonNull(aggregateRootDomainEvent);
         final AggregateRootEventPayloadSerde aggregateRootEventPayloadSerde = getSerdeInstance(
                 aggregateRootDomainEvent.aggregateType(), aggregateRootDomainEvent.eventType());
@@ -59,7 +60,7 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
     @Override
     @Transactional
     public List<AggregateRootDomainEvent> loadOrderByVersionASC(final AggregateRootIdentifier<ID> aggregateRootIdentifier)
-            throws EventStoreException {
+            throws MissingSerdeException, EventStoreException {
         Objects.requireNonNull(aggregateRootIdentifier);
         try (final Connection connection = dataSource.getConnection();
              final PreparedStatement nbOfEventsStmt = connection.prepareStatement(
@@ -90,7 +91,7 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
     @Transactional
     public List<AggregateRootDomainEvent> loadHavingMaxVersionOrderByVersionASC(final AggregateRootIdentifier<ID> aggregateRootIdentifier,
                                                                                 final AggregateVersion aggregateVersion)
-            throws EventStoreException {
+            throws MissingSerdeException, EventStoreException {
         Objects.requireNonNull(aggregateRootIdentifier);
         Objects.requireNonNull(aggregateVersion);
         try (final Connection connection = dataSource.getConnection();
@@ -111,7 +112,7 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
         }
     }
 
-    private AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> toAggregateRootDomainEvent(final ResultSet resultSet) throws SQLException {
+    private AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> toAggregateRootDomainEvent(final ResultSet resultSet) throws SQLException, MissingSerdeException {
         final AggregateType aggregateType = new AggregateType(resultSet.getString("aggregateroottype"));
         final EventType eventType = new EventType(resultSet.getString("eventtype"));
         final AggregateRootEventPayloadSerde<T, ?> aggregateRootEventPayloadSerde = getSerdeInstance(aggregateType, eventType);
@@ -126,12 +127,12 @@ public abstract class BaseJdbcPostgresqlEventRepository<ID extends AggregateId, 
     }
 
     private AggregateRootEventPayloadSerde<T, ?> getSerdeInstance(
-            final AggregateType aggregateType, final EventType eventType) {
+            final AggregateType aggregateType, final EventType eventType) throws MissingSerdeException {
         return aggregateRootEventPayloadsSerde.stream()
                 .filter(bean -> aggregateType.equals(new AggregateType(bean.aggregateRootClass())))
                 .filter(bean -> eventType.equals(new EventType(bean.aggregateRootEventPayloadClass())))
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Should not be here ! Validation must prevent it"));
+                .orElseThrow(() -> new MissingSerdeException(aggregateType, eventType));
     }
 
     protected Class<ID> aggregateIdClazz() {
