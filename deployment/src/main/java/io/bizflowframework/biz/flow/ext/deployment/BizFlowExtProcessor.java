@@ -287,7 +287,7 @@ class BizFlowExtProcessor {
     }
 
     @BuildStep
-    void enhanceOnSavedEvent(final ApplicationIndexBuildItem applicationIndexBuildItem,
+    void enhanceEventHandler(final ApplicationIndexBuildItem applicationIndexBuildItem,
                              final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
                 .getAllKnownSubclasses(EventHandler.class)
