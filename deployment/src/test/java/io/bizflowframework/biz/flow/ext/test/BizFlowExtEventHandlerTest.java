@@ -3,7 +3,7 @@ package io.bizflowframework.biz.flow.ext.test;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRootRepository;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.CreatedAt;
 import io.bizflowframework.biz.flow.ext.test.event.*;
-import io.bizflowframework.biz.flow.ext.test.query.HandleTodoCreatedEvent;
+import io.bizflowframework.biz.flow.ext.test.query.HandleTodoCreatedEventHandler;
 import io.bizflowframework.biz.flow.ext.test.query.QueryEntity;
 import io.bizflowframework.biz.flow.ext.test.query.QueryService;
 import io.quarkus.test.QuarkusUnitTest;
@@ -19,7 +19,7 @@ import java.time.Month;
 
 import static org.assertj.core.api.Assertions.*;
 
-public class BizFlowExtBaseOnSavedEventTest {
+public class BizFlowExtEventHandlerTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
@@ -34,7 +34,7 @@ public class BizFlowExtBaseOnSavedEventTest {
                     .addClass(TodoAggregateRootRepository.class)
                     .addClass(StubbedDefaultCreatedAtProvider.class)
                     .addClass(StubbedDefaultAggregateVersionIncrementer.class)
-                    .addClass(HandleTodoCreatedEvent.class) // here
+                    .addClass(HandleTodoCreatedEventHandler.class) // here
                     .addClass(QueryEntity.class)
                     .addClass(QueryService.class)
                     .addAsResource("application.properties")

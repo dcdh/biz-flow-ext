@@ -4,7 +4,7 @@ import io.agroal.api.AgroalDataSource;
 import io.bizflowframework.biz.flow.ext.runtime.AggregateId;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRoot;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.BaseAggregateRootRepository;
-import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.BaseOnSavedEvent;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.EventHandler;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.DefaultCreatedAtProvider;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.api.ExceptionsMapper;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.command.AggregateCommandRequest;
@@ -202,7 +202,7 @@ class BizFlowExtProcessor {
                                         .addParameterType(Type.parameterizedType(Type.classType(EventRepository.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass)))
                                         .addParameterType(Type.classType(AggregateRootInstanceCreator.class))
                                         .addParameterType(Type.parameterizedType(Type.classType(Instance.class),
-                                                Type.parameterizedType(Type.classType(BaseOnSavedEvent.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass),
+                                                Type.parameterizedType(Type.classType(EventHandler.class), Type.classType(aggregateIdClass), Type.classType(aggregateRootClass),
                                                         Type.wildcardTypeWithUpperBound(Type.parameterizedType(Type.classType(AggregateRootEventPayload.class), Type.classType(aggregateRootClass))))))
                                         .setReturnType(Type.voidType())
                                         .build());
@@ -290,23 +290,23 @@ class BizFlowExtProcessor {
     void enhanceOnSavedEvent(final ApplicationIndexBuildItem applicationIndexBuildItem,
                              final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
-                .getAllKnownSubclasses(BaseOnSavedEvent.class)
+                .getAllKnownSubclasses(EventHandler.class)
                 .forEach(classInfo ->
                         bytecodeTransformerBuildItemProducer.produce(
                                 new BytecodeTransformerBuildItem.Builder()
                                         .setClassToTransform(classInfo.name().toString())
                                         .setVisitorFunction((s, classVisitor) ->
-                                                new BaseOnSavedEventClassVisitor(classVisitor))
+                                                new EventHandlerClassVisitor(classVisitor))
                                         .setCacheable(true)
                                         .build()
                         ));
     }
 
     @BuildStep
-    void registerBaseOnSavedEventsAsSingletonBeans(final ApplicationIndexBuildItem applicationIndexBuildItem,
-                                                   final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
+    void registerEventsHandlersAsSingletonBeans(final ApplicationIndexBuildItem applicationIndexBuildItem,
+                                                final BuildProducer<AdditionalBeanBuildItem> additionalBeanBuildItemProducer) {
         applicationIndexBuildItem.getIndex()
-                .getAllKnownSubclasses(BaseOnSavedEvent.class)
+                .getAllKnownSubclasses(EventHandler.class)
                 .forEach(classInfo ->
                         additionalBeanBuildItemProducer.produce(
                                 new AdditionalBeanBuildItem.Builder()

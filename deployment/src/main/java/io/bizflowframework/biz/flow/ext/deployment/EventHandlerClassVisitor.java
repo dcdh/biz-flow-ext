@@ -8,7 +8,7 @@ import org.objectweb.asm.Opcodes;
 
 import java.util.List;
 
-public final class BaseOnSavedEventClassVisitor extends ClassVisitor {
+public final class EventHandlerClassVisitor extends ClassVisitor {
     private static final String AGGREGATE_ROOT_CLASS_METHOD_NAMING = "aggregateRootClass";
     private static final String AGGREGATE_ROOT_EVENT_PAYLOAD_CLASS_METHOD_NAMING = "aggregateRootEventPayloadClass";
     private static final List<String> METHODS_TO_OVERRIDE = List.of(AGGREGATE_ROOT_CLASS_METHOD_NAMING, AGGREGATE_ROOT_EVENT_PAYLOAD_CLASS_METHOD_NAMING);
@@ -17,7 +17,7 @@ public final class BaseOnSavedEventClassVisitor extends ClassVisitor {
     private ClassTypeParameter aggregateRoot;
     private ClassTypeParameter aggregateRootEventPayload;
 
-    public BaseOnSavedEventClassVisitor(final ClassVisitor classVisitor) {
+    public EventHandlerClassVisitor(final ClassVisitor classVisitor) {
         super(Gizmo.ASM_API_VERSION, classVisitor);
     }
 

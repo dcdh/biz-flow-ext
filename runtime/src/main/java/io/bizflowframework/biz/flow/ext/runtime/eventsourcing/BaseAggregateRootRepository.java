@@ -17,11 +17,11 @@ import java.util.stream.Collectors;
 public abstract class BaseAggregateRootRepository<ID extends AggregateId, T extends AggregateRoot<ID, T>> implements AggregateRootRepository<ID, T> {
     private final EventRepository<ID, T> eventRepository;
     private final AggregateRootInstanceCreator aggregateRootInstanceCreator;
-    private final Instance<BaseOnSavedEvent<ID, T, ? extends AggregateRootEventPayload<T>>> onSavedEvent;
+    private final Instance<EventHandler<ID, T, ? extends AggregateRootEventPayload<T>>> onSavedEvent;
 
     public BaseAggregateRootRepository(final EventRepository<ID, T> eventRepository,
                                        final AggregateRootInstanceCreator aggregateRootInstanceCreator,
-                                       final Instance<BaseOnSavedEvent<ID, T, ? extends AggregateRootEventPayload<T>>> onSavedEvent) {
+                                       final Instance<EventHandler<ID, T, ? extends AggregateRootEventPayload<T>>> onSavedEvent) {
         this.eventRepository = Objects.requireNonNull(eventRepository);
         this.aggregateRootInstanceCreator = Objects.requireNonNull(aggregateRootInstanceCreator);
         this.onSavedEvent = Objects.requireNonNull(onSavedEvent);
@@ -35,7 +35,7 @@ public abstract class BaseAggregateRootRepository<ID extends AggregateId, T exte
             final AggregateRootDomainEvent<ID, T, ? extends AggregateRootEventPayload<T>> domainEventToSave = aggregateRoot.consumeDomainEvent();
             eventRepository.save(domainEventToSave);
             getOnSaveEventInstances(aggregateRoot.aggregateRootIdentifier.aggregateType(), domainEventToSave.eventType())
-                    .forEach(bean -> bean.execute(
+                    .forEach(bean -> bean.handle(
                             domainEventToSave.aggregateRootIdentifier(),
                             domainEventToSave.aggregateVersion(),
                             domainEventToSave.createdAt(),
@@ -45,7 +45,7 @@ public abstract class BaseAggregateRootRepository<ID extends AggregateId, T exte
         return aggregateRoot;
     }
 
-    private List<BaseOnSavedEvent> getOnSaveEventInstances(final AggregateType aggregateType, final EventType eventType) {
+    private List<EventHandler> getOnSaveEventInstances(final AggregateType aggregateType, final EventType eventType) {
         return onSavedEvent.stream()
                 .filter(bean -> aggregateType.equals(bean.aggregateType()))
                 .filter(bean -> eventType.equals(bean.eventType()))
