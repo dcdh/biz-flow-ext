@@ -32,7 +32,6 @@ public class BizFlowExtAggregateRootJdbcEventRepositoryGenerationTest {
                     .addClass(TodoMarkedAsCompletedEventSerde.class)
                     .addClass(TodoAggregateRootRepository.class)
                     .addClass(StubbedDefaultCreatedAtProvider.class)
-                    .addClass(StubbedDefaultAggregateVersionIncrementer.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql"));
 

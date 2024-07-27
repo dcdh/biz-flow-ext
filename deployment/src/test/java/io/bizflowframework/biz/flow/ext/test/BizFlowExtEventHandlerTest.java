@@ -2,6 +2,7 @@ package io.bizflowframework.biz.flow.ext.test;
 
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.AggregateRootRepository;
 import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.CreatedAt;
+import io.bizflowframework.biz.flow.ext.runtime.eventsourcing.incrementer.DefaultAggregateVersionIncrementer;
 import io.bizflowframework.biz.flow.ext.test.event.*;
 import io.bizflowframework.biz.flow.ext.test.query.HandleTodoCreatedEventHandler;
 import io.bizflowframework.biz.flow.ext.test.query.QueryEntity;
@@ -33,7 +34,6 @@ public class BizFlowExtEventHandlerTest {
                     .addClass(TodoAggregateBaseJdbcPostgresqlEventRepository.class)
                     .addClass(TodoAggregateRootRepository.class)
                     .addClass(StubbedDefaultCreatedAtProvider.class)
-                    .addClass(StubbedDefaultAggregateVersionIncrementer.class)
                     .addClass(HandleTodoCreatedEventHandler.class) // here
                     .addClass(QueryEntity.class)
                     .addClass(QueryService.class)
@@ -47,7 +47,7 @@ public class BizFlowExtEventHandlerTest {
     StubbedDefaultCreatedAtProvider stubbedDefaultCreatedAtProvider;
 
     @Inject
-    StubbedDefaultAggregateVersionIncrementer stubbedDefaultAggregateVersionIncrementer;
+    DefaultAggregateVersionIncrementer defaultAggregateVersionIncrementer;
 
     @Inject
     QueryService queryService;
@@ -57,7 +57,7 @@ public class BizFlowExtEventHandlerTest {
         // Given
         stubbedDefaultCreatedAtProvider.addResponse(new CreatedAt(LocalDateTime.of(1983, Month.JULY, 27, 19, 30)));
         final TodoAggregateRoot givenTodoAggregateRoot = new TodoAggregateRoot(new TodoId("shouldEventBeenExecuted"),
-                stubbedDefaultCreatedAtProvider, stubbedDefaultAggregateVersionIncrementer);
+                stubbedDefaultCreatedAtProvider, defaultAggregateVersionIncrementer);
         givenTodoAggregateRoot.createNewTodo("lorem ipsum dolor sit amet");
 
         // When

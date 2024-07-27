@@ -33,7 +33,6 @@ public class BizFlowExtAggregateRootRepositoryCodeEnhancementTest {
                     .addClass(TodoAggregateBaseJdbcPostgresqlEventRepository.class)
                     .addClass(TodoAggregateRootRepositoryEnhanced.class)
                     .addClass(StubbedDefaultCreatedAtProvider.class)
-                    .addClass(StubbedDefaultAggregateVersionIncrementer.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql"));
 

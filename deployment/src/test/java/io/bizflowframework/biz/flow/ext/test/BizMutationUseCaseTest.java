@@ -20,8 +20,7 @@ public class BizMutationUseCaseTest {
                             TodoAggregateRoot.class,
                             CreateTodoCommandRequest.class,
                             CreateTodoBizMutationUseCaseException.class,
-                            StubbedDefaultCreatedAtProvider.class,
-                            StubbedDefaultAggregateVersionIncrementer.class)
+                            StubbedDefaultCreatedAtProvider.class)
                     .addAsResource("application.properties")
                     .addAsResource("init.sql"));
 
